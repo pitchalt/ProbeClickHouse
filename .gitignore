@@ -10,6 +10,7 @@
 *.psess
 *.vsp
 .vs
+test/.vscode
 .idea
 .metadata
 .settings
