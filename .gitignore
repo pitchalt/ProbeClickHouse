@@ -1,0 +1,21 @@
+# Add any directories, files, or patterns you don't want to be tracked by version control
+*.bak
+*.licx
+*.licx.bak
+*.suo
+*.lyx~
+*.DS_Store
+*.csproj.user
+*.log
+*.psess
+*.vsp
+.vs
+.idea
+.metadata
+.settings
+obj
+bin
+packages
+App.config
+App.Debug.config
+UnusableNodes*
