@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Data.SqlClient;
+using System.Data;
+using System.Data.Odbc;
+using ClickHouse.Ado.Impl.Data;
+using ClickHouse.Ado;
 
 namespace test
 {
@@ -9,17 +12,11 @@ namespace test
     {
         static void Main(string[] args)
         {
-          //  Console.WriteLine("Hello World!");
-            List<FactLS> factList = new List<FactLS>();
-            List<Article> aricleList = new List<Article>();
-            //Console.WriteLine("mr");
-            using (var sr = new StreamReader("/home/natalia/meme/fact.txt"))
-             {  
-                 //Console.WriteLine("mr");
-                 char line = Char.Parse(sr.Read().ToString());
+        //    using (var sr = new StreamReader("/home/natalia/meme/fact.txt"))
+           //  {                   
+               
                 // string allProperty = sr.ReadToEnd();
-                 int i = 0;
-                 Console.WriteLine(line);
+              
                 // FactLS fact = new FactLS();
                 /*  while( sr.Peek() >= 0)
                   {
@@ -55,9 +52,9 @@ namespace test
 
                       }*/
                  // }
-              }  
+          //    }  
 
-        Console.WriteLine(factList.Count);
+       
        // foreach(var fact in factList)
         //  {
          //   Console.WriteLine(fact.ID.ToString() + " " + fact.Summ.ToString() + " " + fact.Article.Code.ToString());
@@ -65,33 +62,22 @@ namespace test
         //  }
 
 
-/*
- string connectionString =
-            ConsoleApplication1.Properties.Settings.Default.ConnectionString;
-        //
-        // In a using statement, acquire the SqlConnection as a resource.
-        //
-        using (SqlConnection con = new SqlConnection(connectionString))
+         
+        using (ClickHouseConnection con = new ClickHouseConnection("Host=127.0.0.1;Port=9000;User=default;Password=default;Compress=True;CheckCompressedHash=False;SocketTimeout=60000000;Compressor=lz4"))
         {
-            //
-            // Open the SqlConnection.
-            //
-            con.Open();
-            //
-            // This code uses an SqlCommand based on the SqlConnection.
-            //
-            using (SqlCommand command = new SqlCommand("SELECT TOP 2 * FROM Dogs1", con))
-            using (SqlDataReader reader = command.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    Console.WriteLine("{0} {1} {2}",
-                        reader.GetInt32(0), reader.GetString(1), reader.GetString(2));
-                }
-            }
+          
+          var cmd = con.CreateCommand();
+          cmd.CommandText = "select count() from tutorial.hits_v1";
+          con.Open();
+
+          using (var reader = cmd.ExecuteReader())
+          {
+           // Console.WriteLine(reader.NextResult().ToString());
+          }
+
+       
         }
 
-*/
         }
         
     }

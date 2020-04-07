@@ -5,4 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="ClickHouse.Ado" Version="1.1.21" />
+  </ItemGroup>
 </Project>
