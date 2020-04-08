@@ -12,67 +12,52 @@ namespace test
     {
         static void Main(string[] args)
         {
-        //    using (var sr = new StreamReader("/home/natalia/meme/fact.txt"))
-           //  {                   
-               
-                // string allProperty = sr.ReadToEnd();
-              
-                // FactLS fact = new FactLS();
-                /*  while( sr.Peek() >= 0)
-                  {
-                    line = sr.;
-                    allProperty += line;
-                    
-                    if( line == "/n")
-                    {
-                      factList.Add(fact);
-                      fact = new FactLS();
-                      i = 0;
-                      allProperty = "";
-                    }
-                      if(line == " ")
-                      {
-                        if(i == 0)
-                        {
-                          fact.ID = Int32.Parse(allProperty);
-                          i++ ;
-                        }
-                        else 
-                        if(i == 1)
-                        {
-                          fact.Summ = Decimal.Parse(allProperty);
-                          i++;
-                        }
-                        else 
-                        if(i == 2)
-                        {
-                          fact.Article = new Article();
-                          fact.Article.Code = allProperty;                         
-                        }
+ 
+        ClickHouseConnectionSettings set = new ClickHouseConnectionSettings();
+         set.Database = "default";
+         set.Host = "localhost";
+         set.Port = 9000;
+         set.SocketTimeout = 60000000;
+         set.Compress = true;
+         set.User = "default";
+         set.Password = "";
 
-                      }*/
-                 // }
-          //    }  
-
-       
-       // foreach(var fact in factList)
-        //  {
-         //   Console.WriteLine(fact.ID.ToString() + " " + fact.Summ.ToString() + " " + fact.Article.Code.ToString());
-            
-        //  }
-
-
+         List<Hits> list = new List<Hits>();
          
-        using (ClickHouseConnection con = new ClickHouseConnection("Host=127.0.0.1;Port=9000;User=default;Password=default;Compress=True;CheckCompressedHash=False;SocketTimeout=60000000;Compressor=lz4"))
+                 //using (ClickHouseConnection con = new ClickHouseConnection("Host=127.0.0.1;Port=9000;User=default;Password=default;Compress=True;CheckCompressedHash=False;SocketTimeout=60000000;Compressor=lz4"))
+        using (ClickHouseConnection con = new ClickHouseConnection(set))
         {
-          
-          var cmd = con.CreateCommand();
-          cmd.CommandText = "select count() from tutorial.hits_v1";
           con.Open();
-
-          using (var reader = cmd.ExecuteReader())
+          
+          //var cmd = con.CreateCommand();
+          ClickHouseCommand cmd = new ClickHouseCommand();
+          cmd.Connection = con;
+          
+          cmd.CommandTimeout = 30;
+          cmd.CommandText = "select WatchID from default.hits_100m_obfuscated limit 10";
+          
+          Console.WriteLine(cmd.ExecuteNonQuery());
+          using (ClickHouseDataReader reader = (ClickHouseDataReader)cmd.ExecuteReader())
           {
-           // Console.WriteLine(reader.NextResult().ToString());
+             Console.WriteLine("meme");
+             //Console.WriteLine(reader.NextResult .ToString());
+           //  Console.WriteLine("{0}",reader.GetInt64(0));
+            while(reader.Read())
+            //while(reader.NextResult())
+            {
+              Console.WriteLine(reader.FieldCount);
+
+              //  Console.WriteLine(reader.GetData(0));
+              //  Console.WriteLine(reader.Read());
+              //  Console.WriteLine("{0}",reader.GetValue());
+             //   Console.WriteLine("{0}",reader.GetInt64(0));
+              //  Console.WriteLine("{0}",reader.GetName(0));
+               // Console.WriteLine("{0}",reader.GetOrdinal("WatchID"));
+             //   Console.WriteLine(reader.GetValue(0));
+                
+           
+            }
+           
           }
 
        

@@ -1,117 +1,231 @@
 using System;
+using System.Collections;
 
 namespace test
 {
 
-    public class Hits
+    public class Hits : IEnumerable
     {
-        /*
-        WatchID	UInt64					
-JavaEnable	UInt8					
-Title	String					
-GoodEvent	Int16					
-EventTime	DateTime					
-EventDate	Date					
-CounterID	UInt32					
-ClientIP	UInt32					
-RegionID	UInt32					
-UserID	UInt64					
-CounterClass	Int8					
-OS	UInt8					
-UserAgent	UInt8					
-URL	String					
-Referer	String					
-Refresh	UInt8					
-RefererCategoryID	UInt16					
-RefererRegionID	UInt32					
-URLCategoryID	UInt16					
-URLRegionID	UInt32					
-ResolutionWidth	UInt16					
-ResolutionHeight	UInt16					
-ResolutionDepth	UInt8					
-FlashMajor	UInt8					
-FlashMinor	UInt8					
-FlashMinor2	String					
-NetMajor	UInt8					
-NetMinor	UInt8					
-UserAgentMajor	UInt16					
-UserAgentMinor	FixedString(2)					
-CookieEnable	UInt8					
-JavascriptEnable	UInt8					
-IsMobile	UInt8					
-MobilePhone	UInt8					
-MobilePhoneModel	String					
-Params	String					
-IPNetworkID	UInt32					
-TraficSourceID	Int8					
-SearchEngineID	UInt16					
-SearchPhrase	String					
-AdvEngineID	UInt8					
-IsArtifical	UInt8					
-WindowClientWidth	UInt16					
-WindowClientHeight	UInt16					
-ClientTimeZone	Int16					
-ClientEventTime	DateTime					
-SilverlightVersion1	UInt8					
-SilverlightVersion2	UInt8					
-SilverlightVersion3	UInt32					
-SilverlightVersion4	UInt16					
-PageCharset	String					
-CodeVersion	UInt32					
-IsLink	UInt8					
-IsDownload	UInt8					
-IsNotBounce	UInt8					
-FUniqID	UInt64					
-OriginalURL	String					
-HID	UInt32					
-IsOldCounter	UInt8					
-IsEvent	UInt8					
-IsParameter	UInt8					
-DontCountHits	UInt8					
-WithHash	UInt8					
-HitColor	FixedString(1)					
-LocalEventTime	DateTime					
-Age	UInt8					
-Sex	UInt8					
-Income	UInt8					
-Interests	UInt16					
-Robotness	UInt8					
-RemoteIP	UInt32					
-WindowName	Int32					
-OpenerName	Int32					
-HistoryLength	Int16					
-BrowserLanguage	FixedString(2)					
-BrowserCountry	FixedString(2)					
-SocialNetwork	String					
-SocialAction	String					
-HTTPError	UInt16					
-SendTiming	UInt32					
-DNSTiming	UInt32					
-ConnectTiming	UInt32					
-ResponseStartTiming	UInt32					
-ResponseEndTiming	UInt32					
-FetchTiming	UInt32					
-SocialSourceNetworkID	UInt8					
-SocialSourcePage	String					
-ParamPrice	Int64					
-ParamOrderID	String					
-ParamCurrency	FixedString(3)					
-ParamCurrencyID	UInt16					
-OpenstatServiceName	String					
-OpenstatCampaignID	String					
-OpenstatAdID	String					
-OpenstatSourceID	String					
-UTMSource	String					
-UTMMedium	String					
-UTMCampaign	String					
-UTMContent	String					
-UTMTerm	String					
-FromTag	String					
-HasGCLID	UInt8					
-RefererHash	UInt64					
-URLHash	UInt64					
-CLID	UInt32
-*/
+    
+        public	UInt64	WatchID {get;set;}				
+        public	Int16		JavaEnable		{get;set;}	
+        public		String	Title	{get;set;}			
+        public		Int16	GoodEvent		{get;set;}		
+        public		DateTime	EventTime	{get;set;}			
+        public		DateTime	EventDate		{get;set;}		
+        public		UInt32	CounterID	{get;set;}			
+        public		UInt32	ClientIP		{get;set;}		
+        public		UInt32	RegionID		{get;set;}		
+        public		UInt64	UserID			{get;set;}	
+        public		Int16	CounterClass	{get;set;}			
+        public		UInt16	OS				{get;set;}
+        public		UInt16	UserAgent	{get;set;}			
+        public		String		URL			{get;set;}
+        public		String		Referer			{get;set;}
+        public		UInt16		Refresh		{get;set;}	
+        public		UInt16		RefererCategoryID		{get;set;}	
+        public		UInt32		RefererRegionID			{get;set;}
+        public		UInt16		URLCategoryID			{get;set;}
+        public		UInt32	URLRegionID				{get;set;}
+        public		UInt16	ResolutionWidth				{get;set;}
+        public		UInt16	ResolutionHeight			{get;set;}	
+        public		UInt16	ResolutionDepth				{get;set;}
+        public		UInt16	FlashMajor				{get;set;}
+        public		UInt16	FlashMinor				{get;set;}
+        public		String	FlashMinor2				{get;set;}
+        public		UInt16	NetMajor				{get;set;}
+        public		UInt16	NetMinor				{get;set;}
+        public		UInt16		UserAgentMajor			{get;set;}
+        public		string		UserAgentMinor			{get;set;}
+        public		UInt16		CookieEnable			{get;set;}
+        public		UInt16		JavascriptEnable			{get;set;}
+        public		UInt16		IsMobile			{get;set;}
+        public		UInt16	MobilePhone				{get;set;}
+        public		String		MobilePhoneModel		{get;set;}	
+        public		String		Params			{get;set;}
+        public		UInt32		IPNetworkID			{get;set;}
+        public		Int16		TraficSourceID			{get;set;}
+        public		UInt16		SearchEngineID			{get;set;}
+        public		String		SearchPhrase			{get;set;}
+        public		UInt16		AdvEngineID			{get;set;}
+        public		UInt16		IsArtifical			{get;set;}
+        public		UInt16		WindowClientWidth			{get;set;}
+        public		UInt16		WindowClientHeight			{get;set;}
+        public		Int16		ClientTimeZone			{get;set;}
+        public		DateTime	ClientEventTime				{get;set;}
+        public		UInt16		SilverlightVersion1			{get;set;}
+        public		UInt16		SilverlightVersion2			{get;set;}
+        public		UInt32		SilverlightVersion3			{get;set;}
+        public		UInt16		SilverlightVersion4			{get;set;}
+        public		String		PageCharset			{get;set;}
+        public		UInt32		CodeVersion			{get;set;}
+        public		UInt16		IsLink			{get;set;}
+        public		UInt16		IsDownload			{get;set;}
+        public		UInt16		IsNotBounce			{get;set;}
+        public		UInt64	FUniqID				{get;set;}
+        public		String		OriginalURL			{get;set;}
+        public		UInt32	HID				{get;set;}
+        public		UInt16	IsOldCounter				{get;set;}
+        public		UInt16	IsEvent				{get;set;}
+        public		UInt16	IsParameter				{get;set;}
+        public		UInt16		DontCountHits		{get;set;}	
+        public		UInt16	WithHash				{get;set;}
+        public		string HitColor					{get;set;}
+        public		DateTime LocalEventTime				{get;set;}	
+        public		UInt16 Age					{get;set;}
+        public		UInt16	 Sex				{get;set;}
+        public		UInt16		Income			{get;set;}
+        public		UInt16		 Interests			{get;set;}
+        public		UInt16		Robotness			{get;set;}
+        public		UInt32		RemoteIP			{get;set;}
+        public		Int32	WindowName				{get;set;}
+        public		Int32	OpenerName				{get;set;}
+        public		Int16		HistoryLength			{get;set;}
+        public		String		BrowserLanguage			{get;set;}
+        public		String	BrowserCountry				{get;set;}
+        public		String		SocialNetwork			{get;set;}
+        public		String		SocialAction			{get;set;}
+        public		UInt16		HTTPError			{get;set;}
+        public		UInt32		SendTiming			{get;set;}
+        public		UInt32	DNSTiming				{get;set;}
+        public		UInt32		ConnectTiming			{get;set;}
+        public		UInt32		ResponseStartTiming			{get;set;}
+        public		UInt32		ResponseEndTiming			{get;set;}
+        public		UInt32		FetchTiming			{get;set;}
+        public		UInt16		SocialSourceNetworkID		{get;set;}	
+        public		String		SocialSourcePage			{get;set;}
+        public		Int64		ParamPrice			{get;set;}
+        public		String		ParamOrderID			{get;set;}
+        public		String ParamCurrency				{get;set;}	
+        public		UInt16	ParamCurrencyID				{get;set;}
+        public		String	OpenstatServiceName			{get;set;}	
+        public		String	OpenstatCampaignID			{get;set;}	
+        public		String	OpenstatAdID				{get;set;}
+        public		String	OpenstatSourceID			{get;set;}	
+        public		String	UTMSource				{get;set;}
+        public		String	UTMMedium				{get;set;}
+        public		String	UTMCampaign				{get;set;}
+        public		String	UTMContent				{get;set;}
+        public		String	UTMTerm				{get;set;}
+        public		String	FromTag				{get;set;}
+        public		UInt16	HasGCLID				{get;set;}
+        public		UInt64	RefererHash				{get;set;}
+        public		UInt64	URLHash				{get;set;}
+        public		UInt32 CLID {get;set;}
+
+
+        public IEnumerator GetEnumerator()
+        {
+            return null;
+           /*  WatchID                                                                                                      
+ JavaEnable                                                                                                    
+ Title                                                                                                        
+ GoodEvent                                                                                                     
+ EventTime                                                                                                  
+ EventDate                                                                                                      
+ CounterID                                                                                                    
+ ClientIP                                                                                                     
+ RegionID                                                                                                     
+ UserID                                                                                                       
+ CounterClass                                                                                                   
+ OS                                                                                                            
+ UserAgent                                                                                                     
+ URL                                                                                                          
+ Referer                                                                                                      
+ Refresh                                                                                                       
+ RefererCategoryID                                                                                            
+ RefererRegionID                                                                                              
+ URLCategoryID                                                                                                
+ URLRegionID                                                                                                  
+ ResolutionWidth                                                                                              
+ ResolutionHeight                                                                                             
+ ResolutionDepth                                                                                               
+ FlashMajor                                                                                                    
+ FlashMinor                                                                                                    
+ FlashMinor2                                                                                                  
+ NetMajor                                                                                                      
+ NetMinor                                                                                                      
+ UserAgentMajor                                                                                               
+ UserAgentMinor                                                                                       
+ CookieEnable                                                                                                  
+ JavascriptEnable                                                                                              
+ IsMobile                                                                                                      
+ MobilePhone                                                                                                   
+ MobilePhoneModel                                                                                             
+ Params                                                                                                       
+ IPNetworkID                                                                                                  
+ TraficSourceID                                                                                                 
+ SearchEngineID                                                                                               
+ SearchPhrase                                                                                                 
+ AdvEngineID                                                                                                   
+ IsArtifical                                                                                                   
+ WindowClientWidth                                                                                            
+ WindowClientHeight                                                                                           
+ ClientTimeZone                                                                                                
+ ClientEventTime                                                                                            
+ SilverlightVersion1                                                                                           
+ SilverlightVersion2                                                                                           
+ SilverlightVersion3                                                                                          
+ SilverlightVersion4                                                                                          
+ PageCharset                                                                                                  
+ CodeVersion                                                                                                  
+ IsLink                                                                                                        
+ IsDownload                                                                                                    
+ IsNotBounce                                                                                                   
+ FUniqID                                                                                                      
+ OriginalURL                                                                                                  
+ HID                                                                                                          
+ IsOldCounter                                                                                                  
+ IsEvent                                                                                                       
+ IsParameter                                                                                                   
+ DontCountHits                                                                                                 
+ WithHash                                                                                                      
+ HitColor                                                                                            
+ LocalEventTime                                                                                             
+ Age                                                                                                           
+ Sex                                                                                                         
+ Income                                                                                                        
+ Interests                                                                                                      
+ Robotness                                                                                                     
+ RemoteIP                                                                                                     
+ WindowName                                                                                                    
+ OpenerName             
+ HistoryLength                                                                                                 
+ BrowserLanguage                                                                                    
+ BrowserCountry                                                                                       
+ SocialNetwork                                                                                                
+ SocialAction                                                                                                 
+ HTTPError                                                                                                    
+ SendTiming                                                                                                   
+ DNSTiming                                                                                                    
+ ConnectTiming                                                                                                
+ ResponseStartTiming                                                                                          
+ ResponseEndTiming                                                                                            
+ FetchTiming                                                                                                  
+ SocialSourceNetworkID                                                                                         
+ SocialSourcePage       
+ ParamPrice                                                                                                    
+ ParamOrderID                                                                                                 
+ ParamCurrency                                                                                        
+ ParamCurrencyID                                                                                              
+ OpenstatServiceName                                                                                          
+ OpenstatCampaignID                                                                                           
+ OpenstatAdID                                                                                                 
+ OpenstatSourceID                                                                                             
+ UTMSource                                                                                                    
+ UTMMedium                                                                                                    
+ UTMCampaign                                                                                                  
+ UTMContent                                                                                                   
+ UTMTerm                                                                                                      
+ FromTag                                                                                                      
+ HasGCLID                                                                                                      
+ RefererHash                                                                                                  
+ URLHash                                                                                                      
+ CLID 
+ */
+        }
+
+
     }
  
 }
