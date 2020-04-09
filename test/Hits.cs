@@ -7,13 +7,13 @@ namespace test
     public class Hits : IEnumerable
     {
     
-        public	UInt64	WatchID {get;set;}				
+        public	String	WatchID {get;set;}	//UInt64			
         public	Int16		JavaEnable		{get;set;}	
         public		String	Title	{get;set;}			
         public		Int16	GoodEvent		{get;set;}		
         public		DateTime	EventTime	{get;set;}			
         public		DateTime	EventDate		{get;set;}		
-        public		UInt32	CounterID	{get;set;}			
+       /* public		UInt32	CounterID	{get;set;}			
         public		UInt32	ClientIP		{get;set;}		
         public		UInt32	RegionID		{get;set;}		
         public		UInt64	UserID			{get;set;}	
@@ -112,17 +112,21 @@ namespace test
         public		UInt64	RefererHash				{get;set;}
         public		UInt64	URLHash				{get;set;}
         public		UInt32 CLID {get;set;}
-
+*/
 
         public IEnumerator GetEnumerator()
         {
-            return null;
-           /*  WatchID                                                                                                      
- JavaEnable                                                                                                    
- Title                                                                                                        
- GoodEvent                                                                                                     
- EventTime                                                                                                  
- EventDate                                                                                                      
+            yield return WatchID ;    
+             yield return JavaEnable ;    
+              yield return Title ;    
+               yield return EventTime ;    
+                yield return EventDate ;                                                                                                     
+ //JavaEnable                                                                                                    
+ //Title                                                                                                        
+// GoodEvent                                                                                                     
+ //EventTime                                                                                                  
+ //EventDate
+ /*                                                                                                       
  CounterID                                                                                                    
  ClientIP                                                                                                     
  RegionID                                                                                                     

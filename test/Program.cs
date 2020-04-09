@@ -43,8 +43,7 @@ namespace test
             ClickHouseConnectionSettings set = new ClickHouseConnectionSettings();
             set.Database = "default";
             set.Host = "localhost";
-            set.Port = 9000;
-         //   set.Port = 32769;
+            set.Port = 9000;           
 //            set.SocketTimeout = 60000000;
             set.Compress = true;
             set.User = "default";
@@ -60,11 +59,11 @@ namespace test
                 //var cmd = con.CreateCommand();
                 ClickHouseCommand cmd = new ClickHouseCommand();
                 cmd.Connection = con;
-                cmd.CommandTimeout = 30;
+                cmd.CommandTimeout = 300;
 
                // cmd.CommandText = "CREATE DATABASE IF NOT EXISTS `firstdb`;";
-               cmd.CommandText = "SELECT WatchID from default.hits_100m_obfuscated limit 10";
-                Console.WriteLine(cmd.ExecuteNonQuery());
+            //   cmd.CommandText = "SELECT WatchID from default.hits_100m_obfuscated limit 10";
+            //    Console.WriteLine(cmd.ExecuteNonQuery());
 
               //  cmd.CommandText = "DROP TABLE IF EXISTS firstdb.firsttbl;";
               //  Console.WriteLine(cmd.ExecuteNonQuery());
@@ -80,28 +79,93 @@ namespace test
             //        "INSERT INTO firstdb.firsttbl (EventDate, ColId, ParamOrderID) VALUES ('2019-01-01', 3, 'str3')").ExecuteNonQuery();
 
 //                cmd.CommandText = "SELECT * from firstdb.firsttbl;";
-            //    PrintData(con.CreateCommand("SELECT * from firstdb.firsttbl").ExecuteReader());
+              var reader = con.CreateCommand("SELECT WatchID, JavaEnable, Title, EventTime,  EventDate from default.hits_100m_obfuscated limit 10").ExecuteReader();
+               //var reader = con.CreateCommand("SELECT JavaEnable, Title from default.hits_100m_obfuscated limit 10").ExecuteReader();
+              // PrintData(reader);
+               //for(int i = 0; i < reader.FieldCount; i++)
+              // while (reader.Read())
+             // int i = 0;
+
                 
-                // using (ClickHouseDataReader reader = (ClickHouseDataReader) cmd.ExecuteReader())
-                // {
-                //     Console.WriteLine("meme");
-                //     //Console.WriteLine(reader.NextResult .ToString());//            set.Port = 32769;
-                //
-                //     //  Console.WriteLine("{0}",reader.GetInt64(0));
-                //     while (reader.Read())
-                //         //while(reader.NextResult())
-                //     {
-                //         Console.WriteLine(reader.FieldCount);
-                //
-                //         //  Console.WriteLine(reader.GetData(0));
-                //         //  Console.WriteLine(reader.Read());
-                //         //  Console.WriteLine("{0}",reader.GetValue());
-                //         //   Console.WriteLine("{0}",reader.GetInt64(0));
-                //         //  Console.WriteLine("{0}",reader.GetName(0));
-                //         // Console.WriteLine("{0}",reader.GetOrdinal("WatchID"));
-                //         //   Console.WriteLine(reader.GetValue(0));
-                //     }
-                // }
+                do
+              
+               {
+                  // Console.WriteLine(reader.GetName(i));
+
+                    
+                   while(reader.Read())
+                   {
+                       /*
+                       Console.WriteLine($"WatchID = {reader.GetString(0)}");
+                       Console.WriteLine($"JavaEnable = {reader.GetInt16(1)}");
+                       Console.WriteLine($"Title = {reader.GetString(2)}");
+                       Console.WriteLine($"EventTime = {reader.GetDateTime(3)}");
+                       Console.WriteLine($"EventDate = {reader.GetDateTime(4)}");
+                    */
+                    Hits hit= new Hits();
+
+                        hit.WatchID = (String)reader.GetString(0);
+                        hit.JavaEnable = reader.GetInt16(1);
+                        hit.Title = reader.GetString(2);
+                        hit.EventTime = reader.GetDateTime(3);
+                        hit.EventDate = reader.GetDateTime(4);
+                list.Add(hit);
+
+                      // var me = reader.GetInt16(1);
+                   }
+                   
+                   //
+                 //  object[] obj = new object[10];
+                 //var rere = reader.Read();
+                   //var me = ((ClickHouseDataReader)reader).GetString(2);
+                   //i++;
+               }
+                while (reader.NextResult());
+              
+                   // PrintData(reader);
+
+          
+         // foreach (var el in list)
+        //  {
+       //       Console.WriteLine(el.WatchID + "\t"+ el.JavaEnable+"\t"+ el.Title+"\t"+el.EventTime+"\t"+ el.EventDate);
+      //    }
+
+
+            ClickHouseConnectionSettings set2 = new ClickHouseConnectionSettings();
+           // set2.Database = "tutorail";
+            set2.Host = "localhost";
+            set2.Port = 9000;           
+//            set.SocketTimeout = 60000000;
+            set2.Compress = true;
+            set2.User = "default";
+            set2.Password = "";
+
+ using (ClickHouseConnection con2 = new ClickHouseConnection(set2))
+            {
+                con2.Open();
+
+                //var cmd = con.CreateCommand();
+                ClickHouseCommand cmd2 = con2.CreateCommand();
+                
+
+                cmd2.CommandText = "CREATE DATABASE IF NOT EXISTS `test`;";
+                Console.WriteLine(cmd2.ExecuteNonQuery());
+
+                cmd2.CommandText = "DROP TABLE IF EXISTS test.test_table;";
+                Console.WriteLine(cmd2.ExecuteNonQuery());
+
+                cmd2.CommandText = "CREATE TABLE IF NOT EXISTS test.test_table ( WatchID String, JavaEnable Int16, Title String, EventTime DateTime, EventDate Date) ENGINE = MergeTree() PARTITION BY toYYYYMM(EventDate) ORDER BY (WatchID);";
+                Console.WriteLine(cmd2.ExecuteNonQuery());
+
+                var cmdInsert = con2.CreateCommand("insert into test.test_table (WatchID, JavaEnable, Title, EventTime, EventDate) values @bulk");
+
+                cmdInsert.Parameters.Add(new ClickHouseParameter{ParameterName = "bulk", Value = list});
+
+                cmdInsert.ExecuteNonQuery();
+                }
+
+               
+              
             }
         }
     }
