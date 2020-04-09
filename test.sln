@@ -1,0 +1,23 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test", "test\test.csproj", "{6FF44F08-5FD4-440E-A715-B4B5575AEA90}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestClickHouse", "TestClickHouse\TestClickHouse.csproj", "{F97665BD-10E1-4CB5-9367-C87E4F806ED5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6FF44F08-5FD4-440E-A715-B4B5575AEA90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FF44F08-5FD4-440E-A715-B4B5575AEA90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FF44F08-5FD4-440E-A715-B4B5575AEA90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FF44F08-5FD4-440E-A715-B4B5575AEA90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F97665BD-10E1-4CB5-9367-C87E4F806ED5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F97665BD-10E1-4CB5-9367-C87E4F806ED5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F97665BD-10E1-4CB5-9367-C87E4F806ED5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F97665BD-10E1-4CB5-9367-C87E4F806ED5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
