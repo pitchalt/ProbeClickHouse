@@ -17,7 +17,7 @@ namespace test
          set.Database = "default";
          set.Host = "localhost";
          set.Port = 9000;
-         set.SocketTimeout = 60000000;
+         set.SocketTimeout = 6000000;
          set.Compress = true;
          set.User = "default";
          set.Password = "";
@@ -34,8 +34,10 @@ namespace test
           cmd.Connection = con;
           
           cmd.CommandTimeout = 30;
+          cmd.CommandType = CommandType.Text;
           cmd.CommandText = "select WatchID from default.hits_100m_obfuscated limit 10";
-          
+          //cmd.Transaction = con.BeginTransaction();
+         // cmd.ExecuteNonQuery()
           Console.WriteLine(cmd.ExecuteNonQuery());
           using (ClickHouseDataReader reader = (ClickHouseDataReader)cmd.ExecuteReader())
           {
