@@ -38,9 +38,10 @@ namespace test
             } while (reader.NextResult());
         }
         
-        static void Main(string[] args)
-        {
-            ClickHouseConnectionSettings set = new ClickHouseConnectionSettings();
+            
+    public static void firstTest()
+    {
+        ClickHouseConnectionSettings set = new ClickHouseConnectionSettings();
             set.Database = "default";
             set.Host = "localhost";
             set.Port = 9000;           
@@ -163,10 +164,69 @@ namespace test
 
                 cmdInsert.ExecuteNonQuery();
                 }
-
-               
-              
             }
-        }
+
     }
+    
+    public static void SummingTest()
+    {            
+             ClickHouseConnectionSettings set = new ClickHouseConnectionSettings();
+
+            set.Host = "localhost";
+            set.Port = 9000;          
+
+            set.Compress = true;
+            set.User = "default";
+            set.Password = ""; 
+            
+
+             using (ClickHouseConnection con = new ClickHouseConnection(set))
+            {
+                con.Open();
+
+               ClickHouseCommand cmd = con.CreateCommand();
+                
+
+                cmd.CommandText = "CREATE DATABASE IF NOT EXISTS `test`;";
+                Console.WriteLine(cmd.ExecuteNonQuery());
+
+                cmd.CommandText = "DROP TABLE IF EXISTS test.sum_table;";
+                Console.WriteLine(cmd.ExecuteNonQuery());
+
+                cmd.CommandText = "CREATE TABLE IF NOT EXISTS test.sum_table ( OrderID Int16, SubjectID Int16, Subject String, EventDate Date, Summ Decimal32(2)) ENGINE = SummingMergeTree(Summ) PARTITION BY toYYYYMM(EventDate) ORDER BY (OrderID,SubjectID,Subject,EventDate);";
+                Console.WriteLine(cmd.ExecuteNonQuery());
+              
+
+                cmd.CommandText = "insert into test.sum_table values (1,1,'sub1','2021-01-01',1000)"; //(1,1,'sub1', '2020-01-01', 100.0)
+                cmd.ExecuteNonQuery();
+                cmd.CommandText = "insert into test.sum_table values (2,2,'sub2','2022-01-01',2000)";
+                cmd.ExecuteNonQuery();
+                cmd.CommandText = "insert into test.sum_table values (3,3,'sub3','2023-01-01',3000)";
+                cmd.ExecuteNonQuery();
+                
+                //select OrderID, SubjectID,Subject,EventDate, sum(Summ) from test.sum_table group by OrderID, SubjectID,Subject,EventDate
+            
+            cmd.CommandText = "insert into test.sum_table values (1,1,'sub1','2021-01-01',-1000)"; //(1,1,'sub1', '2020-01-01', 100.0)
+                cmd.ExecuteNonQuery();
+                cmd.CommandText = "insert into test.sum_table values (2,2,'sub2','2022-01-01',-2200)";
+                cmd.ExecuteNonQuery();
+                cmd.CommandText = "insert into test.sum_table values (3,3,'sub3','2023-01-01',-3300)";
+                cmd.ExecuteNonQuery();
+            
+            }
+                
+                }
+    static void Main(string[] args)
+        {
+            SummingTest();
+             
+        }
+
+
+
+    
+    }
+
+
+    
 }
