@@ -204,6 +204,7 @@ namespace test
                 cmd.CommandText = "insert into test.sum_table values (3,3,'sub3','2023-01-01',3000)";
                 cmd.ExecuteNonQuery();
                 
+                
                 //select OrderID, SubjectID,Subject,EventDate, sum(Summ) from test.sum_table group by OrderID, SubjectID,Subject,EventDate
             
             cmd.CommandText = "insert into test.sum_table values (1,1,'sub1','2021-01-01',-1000)"; //(1,1,'sub1', '2020-01-01', 100.0)
@@ -216,11 +217,94 @@ namespace test
             }
                 
                 }
+    
+    
+    public static void TemporaryTableTest()
+    {
+            ClickHouseConnectionSettings set = new ClickHouseConnectionSettings();
+            set.Database = "default";
+            set.Host = "localhost";
+            set.Port = 9000;           
+//            set.SocketTimeout = 60000000;
+            set.Compress = true;
+            set.User = "default";
+            set.Password = "";
+
+            List<Hits> list = new List<Hits>();
+
+            for (int i = 0; i < 5; i++)
+            {
+                Hits hit = new Hits();
+                hit.EventDate = DateTime.Now;
+                hit.EventTime = DateTime.Now;
+                hit.WatchID = i.ToString();
+                hit.Title = "str" + i.ToString();
+               // hit.GoodEvent = (Int16)i;
+                hit.JavaEnable = (Int16)(2 * i);
+
+                list.Add(hit);
+            }
+
+
+            using (ClickHouseConnection con = new ClickHouseConnection(set))
+            {
+                con.Open();
+
+                //var cmd = con.CreateCommand();
+                ClickHouseCommand cmd = con.CreateCommand();
+                
+
+                cmd.CommandText = "CREATE DATABASE IF NOT EXISTS `test`;";
+                Console.WriteLine(cmd.ExecuteNonQuery());
+
+                cmd.CommandText = "DROP TABLE IF EXISTS test.temp_table;";
+                Console.WriteLine(cmd.ExecuteNonQuery());
+
+                cmd.CommandText = "CREATE TABLE IF NOT EXISTS test.temp_table ( WatchID String, JavaEnable Int16, Title String, EventTime DateTime, EventDate Date) ENGINE = MergeTree() PARTITION BY toYYYYMM(EventDate) ORDER BY (WatchID);";
+                Console.WriteLine(cmd.ExecuteNonQuery());
+
+
+
+                cmd.CommandText = "CREATE TEMPORARY TABLE temp ( WatchID String, JavaEnable Int16, Title String, EventTime DateTime, EventDate Date) ENGINE = Memory()";
+                Console.WriteLine(cmd.ExecuteNonQuery()); 
+                
+                var cmdInsert = con.CreateCommand("insert into temp values @bulk");
+                cmdInsert.Parameters.Add(new ClickHouseParameter{ParameterName = "bulk", Value = list});
+                cmdInsert.ExecuteNonQuery();
+
+               cmd.CommandText = "insert into temp (WatchID,JavaEnable,Title,EventDate) values (1,1,'sub1','2021-01-01')"; //(1,1,'sub1', '2020-01-01', 100.0)
+                cmd.ExecuteNonQuery();
+                cmd.CommandText = "insert into temp (WatchID,JavaEnable,Title,EventDate) values (2,2,'sub2','2022-01-01')";
+                cmd.ExecuteNonQuery();
+                cmd.CommandText = "insert into temp (WatchID,JavaEnable,Title,EventDate) values (3,3,'sub3','2023-01-01')";
+                cmd.ExecuteNonQuery();
+
+
+                // var reader = con.CreateCommand("SELECT * from temp").ExecuteReader();
+               //var reader = con.CreateCommand("SELECT JavaEnable, Title from default.hits_100m_obfuscated limit 10").ExecuteReader();
+               //PrintData(reader);
+
+            cmd.CommandText = "insert into test.temp_table select * from temp";
+                cmd.ExecuteNonQuery();
+
+           //  var reader = con.CreateCommand("SELECT * from test.temp_table").ExecuteReader();
+              //  PrintData(reader);
+
+                cmd.CommandText = "drop table temp";
+                cmd.ExecuteNonQuery();
+
+            }
+
+    }
+
+
     static void Main(string[] args)
         {
-            SummingTest();
+           // SummingTest();
+           TemporaryTableTest();
              
         }
+
 
 
 
