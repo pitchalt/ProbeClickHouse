@@ -4,13 +4,31 @@ using System.Collections;
 namespace test
 {
 
+
+
+    public class SummClass : IEnumerable
+    {
+    
+        public	Int32	OrderID {get;set;}	//UInt64			
+        public		String	Subject	{get;set;}				
+        public		DateTime	Date	{get;set;}		
+        public Decimal Summ {get;set;}
+
+         public IEnumerator GetEnumerator()
+        {
+            yield return OrderID ;     
+              yield return Subject ;     
+                yield return Date ;  
+                yield return Summ ; 
+        }		
+    }
     public class Hits : IEnumerable
     {
     
         public	String	WatchID {get;set;}	//UInt64			
         public	Int16		JavaEnable		{get;set;}	
         public		String	Title	{get;set;}			
-        public		Int16	GoodEvent		{get;set;}		
+      //  public		Int16	GoodEvent		{get;set;}		
         public		DateTime	EventTime	{get;set;}			
         public		DateTime	EventDate		{get;set;}		
        /* public		UInt32	CounterID	{get;set;}			
