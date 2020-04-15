@@ -195,7 +195,7 @@ namespace test
                 cmd.CommandText = "DROP TABLE IF EXISTS test.sum_table;";
                 Console.WriteLine(cmd.ExecuteNonQuery());
 
-                cmd.CommandText = "CREATE TABLE IF NOT EXISTS test.sum_table ( OrderID Int16, SubjectID Int16, Subject String, EventDate Date, Summ Decimal32(2)) ENGINE = SummingMergeTree(Summ) PARTITION BY toYYYYMM(EventDate) ORDER BY (OrderID,SubjectID,Subject,EventDate);";
+                cmd.CommandText = "CREATE TABLE IF NOT EXISTS test.sum_table ( OrderID Int16, SubjectID Int16, Subject String, EventDate Date, Summ Decimal(13,2)) ENGINE = SummingMergeTree(Summ) PARTITION BY toYYYYMM(EventDate) ORDER BY (OrderID,SubjectID,Subject,EventDate);";
                 Console.WriteLine(cmd.ExecuteNonQuery());
               
 
@@ -238,7 +238,7 @@ namespace test
                 ClickHouseCommand cmd = con.CreateCommand();                
 
 
-                cmd.CommandText = "CREATE TEMPORARY TABLE temp (OrderID Int32, Subject String, Date Date, Summ Decimal64(3)) ENGINE = Memory()";
+                cmd.CommandText = "CREATE TEMPORARY TABLE temp (OrderID Int32, Subject String, Date Date, Summ Decimal(13,2)) ENGINE = Memory()";
                 Console.WriteLine(cmd.ExecuteNonQuery()); 
                 
                 // insert into temp table reverse records
@@ -277,10 +277,10 @@ namespace test
           using (ClickHouseConnection con = new ClickHouseConnection(CreateConnectionSettings()))
             {
                 con.Open();
-                var cmd = con.CreateCommand();
-                cmd.CommandText = "select OrderID,Subject,Date,-1*SUM(Summ) from test.temp_table group by OrderID,Subject,Date";
-                Console.WriteLine(cmd.ExecuteNonQuery());
-                var reader = con.CreateCommand($"select OrderID,Subject,Date,-1*SUM(Summ)  from test.temp_table where OrderID = {OrderID.ToString()} group by OrderID,Subject,Date").ExecuteReader();
+                //var cmd = con.CreateCommand();
+                //cmd.CommandText = "select OrderID,Subject,Date,-1*SUM(Summ) from test.temp_table group by OrderID,Subject,Date";
+                //Console.WriteLine(cmd.ExecuteNonQuery());
+                var reader = con.CreateCommand($"select OrderID,Subject,Date, toDecimal64(SUM(Summ),2)  from test.temp_table where OrderID = {OrderID.ToString()} group by OrderID,Subject,Date").ExecuteReader();
                     
                 do              
                {                                    
@@ -357,7 +357,7 @@ public static ClickHouseConnectionSettings CreateConnectionSettings()
         ClickHouseConnectionSettings set = new ClickHouseConnectionSettings();
          
             set.Host = "localhost";
-            set.Port = 9000;           
+            set.Port = 32772;           
             set.Compress = true;
             set.User = "default";
             set.Password = "";
@@ -382,7 +382,7 @@ public static void CreateTable()
                 cmd.CommandText = "DROP TABLE IF EXISTS test.temp_table;";
                 Console.WriteLine(cmd.ExecuteNonQuery());
 
-                cmd.CommandText = "CREATE TABLE IF NOT EXISTS test.temp_table ( OrderID Int32, Subject String, Date Date, Summ Decimal64(3)) ENGINE = SummingMergeTree(Summ) PARTITION BY toYYYYMM(Date) ORDER BY (OrderID,Subject,Date);";
+                cmd.CommandText = "CREATE TABLE IF NOT EXISTS test.temp_table ( OrderID Int32, Subject String, Date Date, Summ Decimal(13,2)) ENGINE = SummingMergeTree(Summ) PARTITION BY toYYYYMM(Date) ORDER BY (OrderID,Subject,Date);";
                 Console.WriteLine(cmd.ExecuteNonQuery());
               
 
