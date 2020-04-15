@@ -6,7 +6,7 @@ namespace test
 
 
 
-    public class SummClass : IEnumerable
+    public class SummClass : IEnumerable, IComparable
     {
     
         public	Int32	OrderID {get;set;}	//UInt64			
@@ -20,7 +20,27 @@ namespace test
               yield return Subject ;     
                 yield return Date ;  
                 yield return Summ ; 
-        }		
+        }	
+
+        public int CompareTo(object obj)
+         {
+            if(obj == null)
+            return 1;
+
+            SummClass otherClass = obj as SummClass;
+            if(otherClass != null)
+            {
+              if(this.OrderID == otherClass.OrderID && this.Subject == otherClass.Subject 
+              && this.Date == otherClass.Date)
+              return 0;
+              else return 1;
+            }
+            else
+            {
+              throw new Exception("object is not SummClass");
+            }
+
+         }	
     }
     public class Hits : IEnumerable
     {
