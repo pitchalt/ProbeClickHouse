@@ -238,7 +238,7 @@ namespace test
                 ClickHouseCommand cmd = con.CreateCommand();                
 
 
-                cmd.CommandText = "CREATE TEMPORARY TABLE temp (OrderID Int32, Subject String, Date Date, Summ Decimal(13,2)) ENGINE = Memory()";
+                cmd.CommandText = "CREATE TEMPORARY TABLE temp (OrderID Int32, Subject String, Date Date, Summ Decimal(15,2)) ENGINE = Memory()";
                 Console.WriteLine(cmd.ExecuteNonQuery()); 
                 
                 // insert into temp table reverse records
@@ -309,45 +309,47 @@ namespace test
             List<SummClass> groupedList = new List<SummClass>();
             for(int i = 0; i< list.Count; i++)
             {
-                  if(!groupedList.Contains(list.ElementAt(i)))
+                var el = groupedList.Where(x => x.OrderID == list.ElementAt(i).OrderID
+                                        && x.Subject == list.ElementAt(i).Subject 
+                                        && x.Date == list.ElementAt(i).Date).Select(x => x);               
+
+                  if(el.Count() == 0)
                     {                        
                         groupedList.Add(new SummClass {OrderID = list.ElementAt(i).OrderID,
                         Subject = list.ElementAt(i).Subject, Date = list.ElementAt(i).Date, 
                         Summ = list.ElementAt(i).Summ});
                     }
+                    else 
+                        if(el.Count() > 1)
+                            throw new Exception("smth goes wrong");
                     else
                     {
-                        var el = groupedList.Where(x => x.OrderID == list.ElementAt(i).OrderID
-                                        && x.Subject == list.ElementAt(i).Subject 
-                                        && x.Date == list.ElementAt(i).Date).Select(x => x);
-
-                                        if(el.Count() > 1)
-                                        throw new Exception("smth goes wrong");
-
-                                        el.ElementAt(0).Summ += list.ElementAt(i).Summ;
+                        el.ElementAt(0).Summ += list.ElementAt(i).Summ;
                     }                        
                     
                      
             }
 
 
-            if(list.Count() != listFromDB.Count())
-            return false;
-            else
+           // if(groupedList.Count() != listFromDB.Count())
+          //  return false;
+          //  else
+            
+
+             foreach(var el1 in listFromDB)
             {
-                foreach (var el in list)
+                foreach (var el2 in groupedList)
                 {
-                    var me = from el2 in listFromDB where 
-                     el2.Subject == el.Subject  
-                    && el2.Date == el.Date                    
-                     select el2.Summ;
-                     if (me.Count() > 1)
-                     return false;
-                     else
-                     if(me.ElementAt(0) != el.Summ)
-                     return false;
+                if (el1.OrderID == el2.OrderID && el1.Subject == el2.Subject  
+                    && el1.Date == el2.Date)
+                    {
+                        if (el1.Summ != el2.Summ)
+                        return false;
+                    }
                 }
-            }
+            }  
+
+
             return true;
 
      }
@@ -382,7 +384,7 @@ public static void CreateTable()
                 cmd.CommandText = "DROP TABLE IF EXISTS test.temp_table;";
                 Console.WriteLine(cmd.ExecuteNonQuery());
 
-                cmd.CommandText = "CREATE TABLE IF NOT EXISTS test.temp_table ( OrderID Int32, Subject String, Date Date, Summ Decimal(13,2)) ENGINE = SummingMergeTree(Summ) PARTITION BY toYYYYMM(Date) ORDER BY (OrderID,Subject,Date);";
+                cmd.CommandText = "CREATE TABLE IF NOT EXISTS test.temp_table ( OrderID Int32, Subject String, Date Date, Summ Decimal(15,2)) ENGINE = SummingMergeTree(Summ) PARTITION BY toYYYYMM(Date) ORDER BY (OrderID,Subject,Date);";
                 Console.WriteLine(cmd.ExecuteNonQuery());
               
 
@@ -407,8 +409,8 @@ public static void CreateTable()
             // create begin records
             List<SummClass> listBeginOrd1 = new List<SummClass>();                      
 
-           // listBeginOrd1.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),100));
-          //  listBeginOrd1.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),100));
+            listBeginOrd1.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),100));
+            listBeginOrd1.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),100));
             listBeginOrd1.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),0));
             listBeginOrd1.Add(CreateNewObject(1,"sub2",DateTime.Parse("2019-01-01"),0));
             listBeginOrd1.Add(CreateNewObject(1,"sub3",DateTime.Parse("2019-01-01"),0));
