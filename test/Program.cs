@@ -357,7 +357,7 @@ public static ClickHouseConnectionSettings CreateConnectionSettings()
         ClickHouseConnectionSettings set = new ClickHouseConnectionSettings();
          
             set.Host = "localhost";
-            set.Port = 900;           
+            set.Port = 9000;           
             set.Compress = true;
             set.User = "default";
             set.Password = "";
