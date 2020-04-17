@@ -71,34 +71,25 @@ namespace ClickHouse.Tests
 
             Assert.Equal(res1 + res2 + res3, 0);           
         }
-        public SummClass CreateNewObject(Int32 OrderID, String Subject, DateTime Date, Decimal Summ)
-        {
-            SummClass sc = new SummClass();
-                sc.Date = Date;
-                sc.OrderID = OrderID;
-                sc.Subject = Subject;
-                sc.Summ = Summ;
-                return sc;
-        }
-
+      
        [Fact]
        public void CreateGroupedListTest()
        {
           
            List<SummClass> list = new List<SummClass>();                      
 
-            list.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),100)); 
-            list.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),373)); // повтор
-            list.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),345)); //повтор
-            list.Add(CreateNewObject(1,"sub2",DateTime.Parse("2019-01-01"),450));
-            list.Add(CreateNewObject(1,"sub3",DateTime.Parse("2019-01-01"),305));             
-            list.Add(CreateNewObject(2,"sub1",DateTime.Parse("2019-01-01"),520));
-            list.Add(CreateNewObject(2,"sub2",DateTime.Parse("2019-01-01"),530));
-            list.Add(CreateNewObject(2,"sub2",DateTime.Parse("2019-01-01"),543)); //повтор
-            list.Add(CreateNewObject(2,"sub4",DateTime.Parse("2019-01-01"),530));         
-            list.Add(CreateNewObject(3,"sub2",DateTime.Parse("2019-01-01"),60));
-            list.Add(CreateNewObject(3,"sub3",DateTime.Parse("2019-01-01"),560));
-            list.Add(CreateNewObject(3,"sub3",DateTime.Parse("2019-01-01"),346)); //повтор
+            list.Add(new SummClass(1,"sub1",new DateTime(2019,1,15),100)); 
+            list.Add(new SummClass(1,"sub1",new DateTime(2019,1,15),373)); // повтор
+            list.Add(new SummClass(1,"sub1",new DateTime(2019,1,15),345)); //повтор
+            list.Add(new SummClass(1,"sub2",new DateTime(2019,1,15),450));
+            list.Add(new SummClass(1,"sub3",new DateTime(2019,1,15),305));             
+            list.Add(new SummClass(2,"sub1",new DateTime(2019,1,15),520));
+            list.Add(new SummClass(2,"sub2",new DateTime(2019,1,15),530));
+            list.Add(new SummClass(2,"sub2",new DateTime(2019,1,15),543)); //повтор
+            list.Add(new SummClass(2,"sub4",new DateTime(2019,1,15),530));         
+            list.Add(new SummClass(3,"sub2",new DateTime(2019,1,15),60));
+            list.Add(new SummClass(3,"sub3",new DateTime(2019,1,15),560));
+            list.Add(new SummClass(3,"sub3",new DateTime(2019,1,15),346)); //повтор
 
 
             List<SummClass> groupedList = new List<SummClass>();
@@ -137,28 +128,26 @@ namespace ClickHouse.Tests
            // списки с уникальными записями
          List<SummClass> list1 = new List<SummClass>();                      
 
-            list1.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),100)); 
-            list1.Add(CreateNewObject(1,"sub2",DateTime.Parse("2019-01-01"),400));
-            list1.Add(CreateNewObject(1,"sub3",DateTime.Parse("2019-01-01"),200));             
-            list1.Add(CreateNewObject(2,"sub1",DateTime.Parse("2019-01-01"),600));
-            list1.Add(CreateNewObject(2,"sub2",DateTime.Parse("2019-01-01"),530));
-            list1.Add(CreateNewObject(2,"sub4",DateTime.Parse("2019-01-01"),300));         
-            list1.Add(CreateNewObject(3,"sub2",DateTime.Parse("2019-01-01"),60));
-            list1.Add(CreateNewObject(3,"sub3",DateTime.Parse("2019-01-01"),560));
+            list1.Add(new SummClass(1,"sub1",new DateTime(2019,1,15),100)); 
+            list1.Add(new SummClass(1,"sub2",new DateTime(2019,1,15),400));
+            list1.Add(new SummClass(1,"sub3",new DateTime(2019,1,15),200));             
+            list1.Add(new SummClass(2,"sub1",new DateTime(2019,1,15),600));
+            list1.Add(new SummClass(2,"sub2",new DateTime(2019,1,15),530));
+            list1.Add(new SummClass(2,"sub4",new DateTime(2019,1,15),300));         
+            list1.Add(new SummClass(3,"sub2",new DateTime(2019,1,15),60));
+            list1.Add(new SummClass(3,"sub3",new DateTime(2019,1,15),560));
 
             List<SummClass> list2 = new List<SummClass>();                      
 
-            list2.Add(CreateNewObject(1,"sub5",DateTime.Parse("2019-01-01"),100));
-            list2.Add(CreateNewObject(1,"sub2",DateTime.Parse("2019-01-01"),400));
-            list2.Add(CreateNewObject(1,"sub3",DateTime.Parse("2019-01-01"),200));
+            list2.Add(new SummClass(1,"sub5",new DateTime(2019,1,15),100));
+            list2.Add(new SummClass(1,"sub2",new DateTime(2019,1,15),400));
+            list2.Add(new SummClass(1,"sub3",new DateTime(2019,1,15),200));
 
-            list2.Add(CreateNewObject(2,"sub1",DateTime.Parse("2019-01-01"),600));
-            list2.Add(CreateNewObject(2,"sub3",DateTime.Parse("2019-01-01"),150));
-            list2.Add(CreateNewObject(2,"sub4",DateTime.Parse("2019-01-01"),300));
+            list2.Add(new SummClass(2,"sub1",new DateTime(2019,1,15),600));
+            list2.Add(new SummClass(2,"sub3",new DateTime(2019,1,15),150));
+            list2.Add(new SummClass(2,"sub4",new DateTime(2019,1,15),300));
                 
           
-            // Общbq kbcn
-            List<SummClass> listBoth = new List<SummClass>();  
             foreach(var el1 in list1)
             {
                 foreach (var el2 in list2)
@@ -172,7 +161,7 @@ namespace ClickHouse.Tests
                 }
             }  
             
-            Assert.Equal(res, 0);  
+            Assert.Equal(0, res);  
 
        } 
 
@@ -182,14 +171,14 @@ namespace ClickHouse.Tests
            int res = 0;
            List<SummClass> list = new List<SummClass>();                      
 
-            list.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),100)); 
-            list.Add(CreateNewObject(1,"sub2",DateTime.Parse("2019-01-01"),450));
-            list.Add(CreateNewObject(1,"sub3",DateTime.Parse("2019-01-01"),305));             
-            list.Add(CreateNewObject(2,"sub1",DateTime.Parse("2019-01-01"),520));
-            list.Add(CreateNewObject(2,"sub2",DateTime.Parse("2019-01-01"),530));
-            list.Add(CreateNewObject(2,"sub4",DateTime.Parse("2019-01-01"),530));         
-            list.Add(CreateNewObject(3,"sub2",DateTime.Parse("2019-01-01"),60));
-            list.Add(CreateNewObject(3,"sub3",DateTime.Parse("2019-01-01"),560));
+            list.Add(new SummClass(1,"sub1",new DateTime(2019,1,15),100)); 
+            list.Add(new SummClass(1,"sub2",new DateTime(2019,1,15),450));
+            list.Add(new SummClass(1,"sub3",new DateTime(2019,1,15),305));             
+            list.Add(new SummClass(2,"sub1",new DateTime(2019,1,15),520));
+            list.Add(new SummClass(2,"sub2",new DateTime(2019,1,15),530));
+            list.Add(new SummClass(2,"sub4",new DateTime(2019,1,15),530));         
+            list.Add(new SummClass(3,"sub2",new DateTime(2019,1,15),60));
+            list.Add(new SummClass(3,"sub3",new DateTime(2019,1,15),560));
 
             using (ClickHouseConnection con = new ClickHouseConnection(settings))
             {
@@ -213,7 +202,7 @@ namespace ClickHouse.Tests
 
             }
 
-          Assert.Equal(res, 0);
+          Assert.Equal(0, res);
        } 
          
          [Fact]
@@ -222,14 +211,14 @@ namespace ClickHouse.Tests
 
            List<SummClass> list = new List<SummClass>();                      
 
-            list.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),100)); 
-            list.Add(CreateNewObject(1,"sub2",DateTime.Parse("2019-01-01"),450));
-            list.Add(CreateNewObject(1,"sub3",DateTime.Parse("2019-01-01"),305));             
-            list.Add(CreateNewObject(2,"sub1",DateTime.Parse("2019-01-01"),520));
-            list.Add(CreateNewObject(2,"sub2",DateTime.Parse("2019-01-01"),530));
-            list.Add(CreateNewObject(2,"sub4",DateTime.Parse("2019-01-01"),530));         
-            list.Add(CreateNewObject(3,"sub2",DateTime.Parse("2019-01-01"),60));
-            list.Add(CreateNewObject(3,"sub3",DateTime.Parse("2019-01-01"),560));
+            list.Add(new SummClass(1,"sub1",new DateTime(2019,1,15),100)); 
+            list.Add(new SummClass(1,"sub2",new DateTime(2019,1,15),450));
+            list.Add(new SummClass(1,"sub3",new DateTime(2019,1,15),305));             
+            list.Add(new SummClass(2,"sub1",new DateTime(2019,1,15),520));
+            list.Add(new SummClass(2,"sub2",new DateTime(2019,1,15),530));
+            list.Add(new SummClass(2,"sub4",new DateTime(2019,1,15),530));         
+            list.Add(new SummClass(3,"sub2",new DateTime(2019,1,15),60));
+            list.Add(new SummClass(3,"sub3",new DateTime(2019,1,15),560));
             
 
             List<SummClass> listFromDB = new List<SummClass>();
@@ -246,6 +235,7 @@ namespace ClickHouse.Tests
                 cmdInsert.ExecuteNonQuery();
 
                 var reader = con.CreateCommand($"select OrderID,Subject,Date, toDecimal64(SUM(Summ),2) from temp group by OrderID,Subject,Date").ExecuteReader();
+                    
                     
                 do              
                {                                    
@@ -280,6 +270,59 @@ namespace ClickHouse.Tests
        } 
          
         
+
+        [Fact]
+        public void SelectWhereSummNotNull()
+        {
+           List<SummClass> list = new List<SummClass>();                      
+
+            list.Add(new SummClass(1,"sub1",new DateTime(2019,1,15),100)); 
+            list.Add(new SummClass(1,"sub1",new DateTime(2019,1,15),-100));
+            list.Add(new SummClass(2,"sub3",new DateTime(2019,1,15),305));             
+            list.Add(new SummClass(2,"sub1",new DateTime(2019,1,15),-520));
+
+            List<SummClass> listFromDB = new List<SummClass>();
+            using (ClickHouseConnection con = new ClickHouseConnection(settings))
+            {
+                con.Open();
+
+                ClickHouseCommand cmd = con.CreateCommand();              
+
+
+                cmd.CommandText = "CREATE TEMPORARY TABLE temp (OrderID Int32, Subject String, Date Date, Summ Decimal(15,2)) ENGINE = Memory()";
+                cmd.ExecuteNonQuery(); 
+                         
+                var cmdInsert = con.CreateCommand("insert into temp values @bulk");
+                cmdInsert.Parameters.Add(new ClickHouseParameter{ParameterName = "bulk", Value = list});
+                cmdInsert.ExecuteNonQuery();
+
+                cmd.CommandText = $"insert into test.temp_table select OrderID,Subject,Date,toDecimal64(SUM(Summ),2) from temp group by OrderID,Subject,Date having SUM(Summ) != 0";
+                cmd.ExecuteNonQuery();
+
+                var reader = con.CreateCommand($"select OrderID,Subject,Date, toDecimal64(SUM(Summ),2) from test.temp_table group by OrderID,Subject,Date").ExecuteReader();
+                       
+                do              
+               {                                    
+                   while(reader.Read())
+                   {                    
+                   
+                    listFromDB.Add( new SummClass((Int32)reader.GetInt32(0),(String)reader.GetString(1),
+                     (DateTime)reader.GetDateTime(2),(Decimal)reader.GetDecimal(3)));
+
+                   }
+                }
+                while (reader.NextResult());
+
+                cmd.CommandText = "drop table temp";
+                cmd.ExecuteNonQuery();
+
+
+                con.Close();
+
+            }
+
+          Assert.Equal(2, listFromDB.Count);
+        }
 
 
     }

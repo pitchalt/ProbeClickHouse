@@ -280,7 +280,7 @@ namespace test
                 //var cmd = con.CreateCommand();
                 //cmd.CommandText = "select OrderID,Subject,Date,-1*SUM(Summ) from test.temp_table group by OrderID,Subject,Date";
                 //Console.WriteLine(cmd.ExecuteNonQuery());
-                var reader = con.CreateCommand($"select OrderID,Subject,Date, toDecimal64(SUM(Summ),2)  from test.temp_table where OrderID = {OrderID.ToString()} group by OrderID,Subject,Date").ExecuteReader();
+                var reader = con.CreateCommand($"select OrderID,Subject,Date, toDecimal64(SUM(Summ),2)  from test.temp_table where OrderID = {OrderID.ToString()} group by OrderID,Subject,Date having SUM(Summ) != 0").ExecuteReader();
                     
                 do              
                {                                    
@@ -394,35 +394,25 @@ public static void CreateTable()
 }
 
 
-        public static SummClass CreateNewObject(Int32 OrderID, String Subject, DateTime Date, Decimal Summ)
-        {
-            SummClass sc = new SummClass();
-                sc.Date = Date;
-                sc.OrderID = OrderID;
-                sc.Subject = Subject;
-                sc.Summ = Summ;
-                return sc;
-        }
-
     public static void TemporaryTableTest()
     {
             // create begin records
             List<SummClass> listBeginOrd1 = new List<SummClass>();                      
 
-            listBeginOrd1.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),100));
-            listBeginOrd1.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),100));
-            listBeginOrd1.Add(CreateNewObject(1,"sub1",DateTime.Parse("2019-01-01"),0));
-            listBeginOrd1.Add(CreateNewObject(1,"sub2",DateTime.Parse("2019-01-01"),0));
-            listBeginOrd1.Add(CreateNewObject(1,"sub3",DateTime.Parse("2019-01-01"),0));
+            listBeginOrd1.Add(new SummClass(1,"sub1",new DateTime(2019,01,15),100));
+            listBeginOrd1.Add(new SummClass(1,"sub1",new DateTime(2019,01,15),100));
+            listBeginOrd1.Add(new SummClass(1,"sub1",new DateTime(2019,01,15),0));
+            listBeginOrd1.Add(new SummClass(1,"sub2",new DateTime(2019,01,15),0));
+            listBeginOrd1.Add(new SummClass(1,"sub3",new DateTime(2019,01,15),0));
 
             List<SummClass> listBeginOrd2 = new List<SummClass>();   
-            listBeginOrd2.Add(CreateNewObject(2,"sub1",DateTime.Parse("2019-01-01"),0));
-            listBeginOrd2.Add(CreateNewObject(2,"sub2",DateTime.Parse("2019-01-01"),0));
-            listBeginOrd2.Add(CreateNewObject(2,"sub4",DateTime.Parse("2019-01-01"),0));
+            listBeginOrd2.Add(new SummClass(2,"sub1",new DateTime(2019,01,15),0));
+            listBeginOrd2.Add(new SummClass(2,"sub2",new DateTime(2019,01,15),0));
+            listBeginOrd2.Add(new SummClass(2,"sub4",new DateTime(2019,01,15),0));
 
             List<SummClass> listBeginOrd3 = new List<SummClass>();   
-            listBeginOrd3.Add(CreateNewObject(3,"sub2",DateTime.Parse("2019-01-01"),0));
-            listBeginOrd3.Add(CreateNewObject(3,"sub3",DateTime.Parse("2019-01-01"),0));
+            listBeginOrd3.Add(new SummClass(3,"sub2",new DateTime(2019,01,15),0));
+            listBeginOrd3.Add(new SummClass(3,"sub3",new DateTime(2019,01,15),0));
 
 
            
@@ -444,14 +434,14 @@ public static void CreateTable()
         // create new list
         List<SummClass> newListOrd1 = new List<SummClass>();                      
 
-            newListOrd1.Add(CreateNewObject(1,"sub5",DateTime.Parse("2019-01-01"),100));
-            newListOrd1.Add(CreateNewObject(1,"sub2",DateTime.Parse("2019-01-01"),400));
-            newListOrd1.Add(CreateNewObject(1,"sub3",DateTime.Parse("2019-01-01"),200));
+            newListOrd1.Add(new SummClass(1,"sub5",new DateTime(2019,1,15),100));
+            newListOrd1.Add(new SummClass(1,"sub2",new DateTime(2019,1,15),400));
+            newListOrd1.Add(new SummClass(1,"sub3",new DateTime(2019,1,15),200));
 
         List<SummClass> newListOrd2 = new List<SummClass>();
-            newListOrd2.Add(CreateNewObject(2,"sub1",DateTime.Parse("2019-01-01"),600));
-            newListOrd2.Add(CreateNewObject(2,"sub3",DateTime.Parse("2019-01-01"),150));
-            newListOrd2.Add(CreateNewObject(2,"sub4",DateTime.Parse("2019-01-01"),300));
+            newListOrd2.Add(new SummClass(2,"sub1",new DateTime(2019,1,15),600));
+            newListOrd2.Add(new SummClass(2,"sub3",new DateTime(2019,1,15),150));
+            newListOrd2.Add(new SummClass(2,"sub4",new DateTime(2019,1,15),300));
 
 
         UpdateOrderData(newListOrd1, 1);
