@@ -1,0 +1,46 @@
+create database litetest_db;
+\c meme_db;
+
+CREATE TABLE IF NOT EXISTS Customers 
+ (
+	CustomerID VARCHAR(50) PRIMARY KEY,
+
+        ContactName VARCHAR(50),
+
+    	Phone VARCHAR(50),
+
+    	City VARCHAR(50),
+
+    	Country VARCHAR(50)
+);
+
+CREATE TABLE IF NOT EXISTS Orders 
+ (
+	OrderID integer,
+
+        CustomerID VARCHAR(50) references Customers(CustomerID),
+
+    	OrderDate TIMESTAMP
+);
+
+insert into Customers values (1, 'Thomas Hardy', '666', 'London', 'VelikBritain');
+insert into Customers values (2, 'Victoria Ashworth', '662', 'Memensk', 'VelikBritain');
+insert into Customers values (3, 'Elizabeth Brown', '6665', 'Mayami', 'USA');
+insert into Customers values (4, 'Ann Devon', '6627', 'Minsk', 'USSA');
+insert into Customers values (5, 'Dart Vader', '6668', 'Death Star', 'Space');
+insert into Customers values (6, 'Homer Simpson', '66-55', 'Springfield', 'USA');
+
+insert into Orders values (1, 1, '2019-01-01');
+insert into Orders values (2, 2, '2019-01-01');
+insert into Orders values (3, 3, '2019-01-01');
+
+
+
+Name: Thomas Hardy
+Name: Victoria Ashworth
+Name: Elizabeth Brown
+Name: Ann Devon
+Name: Simon Crowther
+
+
+Name: Hari Kumar
