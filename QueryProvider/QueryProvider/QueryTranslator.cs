@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Text;
 
 namespace QueryProviderTest {
-    
+    /*
     internal class TranslateResult {
 
     internal string CommandText;
@@ -163,6 +163,6 @@ namespace QueryProviderTest {
         }
     }
     
-    
+   */
 }
     

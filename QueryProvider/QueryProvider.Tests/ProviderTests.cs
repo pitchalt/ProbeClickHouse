@@ -190,10 +190,35 @@ namespace QueryProviderTest.Tests
                var query = db.Customers.Where(c => c.City == city)
                             .Select(c => new {Name = c.ContactName, Phone = c.Phone});
                  list = query.ToList();              
-                 foreach(var el in list)
+              /*   foreach(var el in list)
                  {
                      Console.WriteLine($"{0}",el);
-                 }
+                 }*/
+            }   
+            
+            Assert.Equal(2, list.Count);          
+        }
+
+        [Fact]
+        public void Part05Query()
+        {
+            IList list;
+            string city = "London";
+            using (DbConnection con = CreateSqLiteConnection()) {
+                Northwind db = new Northwind(con);
+               var query = db.Customers.Select(c => new {
+                    Name = c.ContactName,
+                    Location = new {
+                    City = c.City,
+                    Country = c.Country
+                    }
+                     })
+                .Where(x => x.Location.City == city);
+                 list = query.ToList();              
+                /* foreach(var el in list)
+                 {
+                     Console.WriteLine($"{0}",el);
+                 }*/
             }   
             
             Assert.Equal(2, list.Count);          

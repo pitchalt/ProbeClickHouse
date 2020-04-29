@@ -8,7 +8,7 @@ using System.Threading;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Data.Common;
-
+using System.Collections.ObjectModel;
 
 namespace QueryProviderTest
 {

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace QueryProviderTest
 {
@@ -273,7 +274,7 @@ internal class QueryBinder : ExpressionVisitor {
 
     }
 
-    protected override Expression VisitMemberAccess(MemberExpression m) {
+    protected override Expression VisitMember(MemberExpression m) {
 
         Expression source = this.Visit(m.Expression);
 

@@ -1,5 +1,8 @@
 using System;
 using System.Data.Common;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -20,63 +23,227 @@ namespace QueryProviderTest
     internal Expression Selector;
 
     }
+    internal sealed class ProjectedColumns {
 
-    internal class ColumnProjector : ExpressionVisitor 
-    {
+   Expression projector;
 
-    StringBuilder sb;
+        ReadOnlyCollection<ColumnDeclaration> columns;
 
-    int iColumn;
+        internal ProjectedColumns(Expression projector, ReadOnlyCollection<ColumnDeclaration> columns) {
 
-    ParameterExpression row;
+            this.projector = projector;
 
-    static MethodInfo miGetValue;
+            this.columns = columns;
 
-    internal ColumnProjector() {
+        }
 
-        if (miGetValue == null) {
+        internal Expression Projector {
 
-            miGetValue = typeof(ProjectionRow).GetMethod("GetValue");
+            get { return this.projector; }
+
+        }
+
+        internal ReadOnlyCollection<ColumnDeclaration> Columns {
+
+            get { return this.columns; }
 
         }
 
     }
 
-    internal ColumnProjection ProjectColumns(Expression expression, ParameterExpression row) {
+      internal class ColumnProjector : DbExpressionVisitor {
 
-        this.sb = new StringBuilder();
+        Nominator nominator;
 
-        this.row = row;
+        Dictionary<ColumnExpression, ColumnExpression> map;
 
-        Expression selector = this.Visit(expression);
+        List<ColumnDeclaration> columns;
 
-        return new ColumnProjection { Columns = this.sb.ToString(), Selector = selector };
+        HashSet<string> columnNames;
 
-    }
-    
-    protected override Expression VisitMember(MemberExpression m) {
+        HashSet<Expression> candidates;
 
-        if (m.Expression != null && m.Expression.NodeType == ExpressionType.Parameter) {
+        string existingAlias;
 
-            if (this.sb.Length > 0) {
+        string newAlias;
 
-                this.sb.Append(", ");
+        int iColumn;
+
+        internal ColumnProjector(Func<Expression, bool> fnCanBeColumn) {
+
+            this.nominator = new Nominator(fnCanBeColumn);
+
+        }
+
+        internal ProjectedColumns ProjectColumns(Expression expression, string newAlias, string existingAlias) {
+
+            this.map = new Dictionary<ColumnExpression, ColumnExpression>();
+
+            this.columns = new List<ColumnDeclaration>();
+
+            this.columnNames = new HashSet<string>();
+
+            this.newAlias = newAlias;
+
+            this.existingAlias = existingAlias;
+
+            this.candidates = this.nominator.Nominate(expression);
+
+            return new ProjectedColumns(this.Visit(expression), this.columns.AsReadOnly());
+
+      }
+
+        public override Expression Visit(Expression expression) {
+
+            if (this.candidates.Contains(expression)) {
+
+                if (expression.NodeType == (ExpressionType)DbExpressionType.Column) {
+
+                    ColumnExpression column = (ColumnExpression)expression;
+
+                    ColumnExpression mapped;
+
+                    if (this.map.TryGetValue(column, out mapped)) {
+
+                        return mapped;
+
+                    }
+
+                    if (this.existingAlias == column.Alias) {
+
+                        int ordinal = this.columns.Count;
+
+                        string columnName = this.GetUniqueColumnName(column.Name);
+
+                        this.columns.Add(new ColumnDeclaration(columnName, column));
+
+                        mapped = new ColumnExpression(column.Type, this.newAlias, columnName, ordinal);
+
+                        this.map[column] = mapped;
+
+                        this.columnNames.Add(columnName);
+
+                    return mapped;
+
+                    }
+
+                    // must be referring to outer scope
+
+                    return column;
+
+                }
+
+                else {
+
+                    string columnName = this.GetNextColumnName();
+
+                 int ordinal = this.columns.Count;
+
+                    this.columns.Add(new ColumnDeclaration(columnName, expression));
+
+                    return new ColumnExpression(expression.Type, this.newAlias, columnName, ordinal);
+
+                }
 
             }
 
-            this.sb.Append(m.Member.Name);
+            else {
 
-            return Expression.Convert(Expression.Call(this.row, miGetValue, Expression.Constant(iColumn++)), m.Type);
+                return base.Visit(expression);
 
-        }
-
-        else {
-
-            return base.VisitMember(m);
+            }
 
         }
 
-    }
+        private bool IsColumnNameInUse(string name) {
+
+            return this.columnNames.Contains(name);
+
+        }
+
+        private string GetUniqueColumnName(string name) {
+
+            string baseName = name;
+
+            int suffix = 1;
+
+            while (this.IsColumnNameInUse(name)) {
+
+                name = baseName + (suffix++);
+
+            }
+
+            return name;
+
+        }
+
+        private string GetNextColumnName() {
+
+            return this.GetUniqueColumnName("c" + (iColumn++));
+
+        }
+
+        class Nominator : DbExpressionVisitor {
+
+            Func<Expression, bool> fnCanBeColumn;
+
+            bool isBlocked;
+
+            HashSet<Expression> candidates;
+
+            internal Nominator(Func<Expression, bool> fnCanBeColumn) {
+
+                this.fnCanBeColumn = fnCanBeColumn;
+
+            }
+
+            internal HashSet<Expression> Nominate(Expression expression) {
+
+                this.candidates = new HashSet<Expression>();
+
+                this.isBlocked = false;
+
+                this.Visit(expression);
+
+                return this.candidates;
+
+            }
+
+            public override Expression Visit(Expression expression) {
+
+                if (expression != null) {
+
+                    bool saveIsBlocked = this.isBlocked;
+
+                    this.isBlocked = false;
+
+                    base.Visit(expression);
+
+                    if (!this.isBlocked) {
+
+                        if (this.fnCanBeColumn(expression)) {
+
+                            this.candidates.Add(expression);
+
+                        }
+
+                        else {
+
+                            this.isBlocked = true;
+
+                        }
+
+                    }
+
+   this.isBlocked |= saveIsBlocked;
+
+                }
+
+                return expression;
+
+            }
+
+        }
 
     }
 

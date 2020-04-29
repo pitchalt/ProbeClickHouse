@@ -25,6 +25,8 @@ namespace QueryProviderTest
 
         TranslateResult result = this.Translate(expression);
 
+        Delegate projector = result.Projector.Compile();
+
         DbCommand cmd = this.connection.CreateCommand();
 
         cmd.CommandText = result.CommandText;
@@ -33,39 +35,25 @@ namespace QueryProviderTest
 
         Type elementType = TypeSystem.GetElementType(expression.Type);
 
-        if (result.Projector != null) {
+        return Activator.CreateInstance(
 
-    Delegate projector = result.Projector.Compile();
+            typeof(ProjectionReader<>).MakeGenericType(elementType),
 
-            return Activator.CreateInstance(
+            BindingFlags.Instance | BindingFlags.NonPublic, null,
 
-                typeof(ProjectionReader<>).MakeGenericType(elementType),
+            new object[] { reader, projector },
 
-                BindingFlags.Instance | BindingFlags.NonPublic, null,
+            null
 
-                new object[] { reader, projector },
+            );
 
-                null
+    }
 
-                );
+    internal class TranslateResult {
 
-        }
+        internal string CommandText;
 
-        else {
-
-            return Activator.CreateInstance(
-
-                typeof(ObjectReader<>).MakeGenericType(elementType),
-
-                BindingFlags.Instance | BindingFlags.NonPublic, null,
-
-                new object[] { reader },
-
-                null
-
-                );
-
-        }
+     internal LambdaExpression Projector;
 
     }
 
@@ -73,7 +61,13 @@ namespace QueryProviderTest
 
         expression = Evaluator.PartialEval(expression);
 
-        return new QueryTranslator().Translate(expression);
+        ProjectionExpression proj = (ProjectionExpression)new QueryBinder().Bind(expression);
+
+        string commandText = new QueryFormatter().Format(proj.Source);
+
+        LambdaExpression projector = new ProjectionBuilder().Build(proj.Projector);
+
+        return new TranslateResult { CommandText = commandText, Projector = projector };
 
     }
 
