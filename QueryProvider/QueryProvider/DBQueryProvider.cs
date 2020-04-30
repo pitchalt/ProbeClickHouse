@@ -1,76 +1,69 @@
 using System;
+using System.IO;
 using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace QueryProviderTest
 {
-    public class DbQueryProvider : QueryProvider {
+     public class DbQueryProvider : QueryProvider {
+        DbConnection connection;
+        TextWriter log;
 
-    DbConnection connection;
+        public DbQueryProvider(DbConnection connection) {
+            this.connection = connection;
+        }
 
-    public DbQueryProvider(DbConnection connection) {
+        public TextWriter Log {
+            get { return this.log; }
+            set { this.log = value; }
+        }
 
-        this.connection = connection;
+        public override string GetQueryText(Expression expression) {
+            return this.Translate(expression).CommandText;
+        }
 
+        public override object Execute(Expression expression) {
+            return this.Execute(this.Translate(expression));
+        }
+
+        private object Execute(TranslateResult query) {
+            Delegate projector = query.Projector.Compile();
+
+            if (this.log != null) {
+                this.log.WriteLine(query.CommandText);
+                this.log.WriteLine();
+            }
+
+            DbCommand cmd = this.connection.CreateCommand();
+            cmd.CommandText = query.CommandText;
+            DbDataReader reader = cmd.ExecuteReader();
+
+            Type elementType = TypeSystem.GetElementType(query.Projector.Body.Type);
+            return Activator.CreateInstance(
+                typeof(ProjectionReader<>).MakeGenericType(elementType),
+                BindingFlags.Instance | BindingFlags.NonPublic, null,
+                new object[] { reader, projector, this },
+                null
+                );
+        }
+
+        internal class TranslateResult {
+            internal string CommandText;
+            internal LambdaExpression Projector;
+        }
+
+        private TranslateResult Translate(Expression expression) {
+            ProjectionExpression projection = expression as ProjectionExpression;
+            if (projection == null) {
+                expression = Evaluator.PartialEval(expression);
+                projection = (ProjectionExpression)new QueryBinder().Bind(expression);
+            }
+            string commandText = new QueryFormatter().Format(projection.Source);
+            LambdaExpression projector = new ProjectionBuilder().Build(projection.Projector, projection.Source.Alias);
+            return new TranslateResult { CommandText = commandText, Projector = projector };
+        }
     }
-
-    public override string GetQueryText(Expression expression) {
-
-        return this.Translate(expression).CommandText;
-
-    }
-
-    public override object Execute(Expression expression) {
-
-        TranslateResult result = this.Translate(expression);
-
-        Delegate projector = result.Projector.Compile();
-
-        DbCommand cmd = this.connection.CreateCommand();
-
-        cmd.CommandText = result.CommandText;
-
-        DbDataReader reader = cmd.ExecuteReader();
-
-        Type elementType = TypeSystem.GetElementType(expression.Type);
-
-        return Activator.CreateInstance(
-
-            typeof(ProjectionReader<>).MakeGenericType(elementType),
-
-            BindingFlags.Instance | BindingFlags.NonPublic, null,
-
-            new object[] { reader, projector },
-
-            null
-
-            );
-
-    }
-
-    internal class TranslateResult {
-
-        internal string CommandText;
-
-     internal LambdaExpression Projector;
-
-    }
-
-    private TranslateResult Translate(Expression expression) {
-
-        expression = Evaluator.PartialEval(expression);
-
-        ProjectionExpression proj = (ProjectionExpression)new QueryBinder().Bind(expression);
-
-        string commandText = new QueryFormatter().Format(proj.Source);
-
-        LambdaExpression projector = new ProjectionBuilder().Build(proj.Projector);
-
-        return new TranslateResult { CommandText = commandText, Projector = projector };
-
-    }
-
-}
     
 }

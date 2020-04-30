@@ -33,22 +33,21 @@ public class Customers: XPLiteObject {
         public Orders(Session session) : base(session) { }
     }
 
-public class Northwind {
+ public class Northwind {
+        public Query<Customers> Customers;
+        public Query<Orders> Orders;
 
-    public Query<Customers> Customers;
+        private DbQueryProvider provider;
+        public Northwind(DbConnection connection) {
+            this.provider = new DbQueryProvider(connection);
+            this.Customers = new Query<Customers>(this.provider);
+            this.Orders = new Query<Orders>(this.provider);
+        }
 
-    public Query<Orders> Orders;
-
-    public Northwind(DbConnection connection) {
-
-        QueryProvider provider = new DbQueryProvider(connection);
-
-        this.Customers = new Query<Customers>(provider);
-
-        this.Orders = new Query<Orders>(provider);
-
+        public TextWriter Log {
+            get { return this.provider.Log; }
+            set { this.provider.Log = value; }
+        }
     }
-
-}
 
 }

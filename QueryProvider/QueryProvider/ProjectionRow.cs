@@ -10,11 +10,9 @@ using System.Text;
 namespace QueryProviderTest
 {
     public abstract class ProjectionRow {
-
-    public abstract object GetValue(int index);
-
-    }   
-    
+        public abstract object GetValue(int index);
+        public abstract IEnumerable<E> ExecuteSubQuery<E>(LambdaExpression query);
+    }
 
     internal class ColumnProjection {
 
