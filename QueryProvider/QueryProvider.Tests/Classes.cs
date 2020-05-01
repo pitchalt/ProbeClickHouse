@@ -40,9 +40,10 @@ public class Northwind {
 
     public Query<Orders> Orders;
 
-    public Northwind(DbConnection connection) {
+    public Northwind(DbConnection connection, TextWriter log) {
 
-        QueryProvider provider = new DbQueryProvider(connection);
+        DbQueryProvider provider = new DbQueryProvider(connection);
+        provider.Log = log;
 
         this.Customers = new Query<Customers>(provider);
 

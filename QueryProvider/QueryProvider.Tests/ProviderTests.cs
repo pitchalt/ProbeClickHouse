@@ -10,6 +10,9 @@ using Xunit.Abstractions;
 using QueryProviderTest;
 using System.Collections.Generic;
 using System.Collections;
+using System.Text;
+
+using Xunit.Sdk;
 
 namespace QueryProviderTest.Tests
  {
@@ -19,9 +22,34 @@ namespace QueryProviderTest.Tests
         
     }
 
-    public class QueryTests: IDisposable
+   public class TestOutTextWriter : TextWriter {
+
+       private readonly ITestOutputHelper _Output;
+       private readonly StringBuilder _Builder;
+       public override Encoding Encoding { get; }
+
+       public override void Write(char value) {
+           if (value != '\n')
+               _Builder.Append(value);
+           else {
+               _Output.WriteLine(_Builder.ToString());
+               _Builder.Clear();
+           }
+       }
+
+       public TestOutTextWriter(ITestOutputHelper testOut) {
+           _Output = testOut;
+           _Builder = new StringBuilder(1024);
+       } 
+               
+               
+   }
+
+   public class QueryTests: IDisposable
     {
         private readonly ITestOutputHelper _testOutputHelper;
+
+        private readonly TestOutTextWriter _TestOutWriter;
         // public static String ConnectionString { get; protected set; }
 
         private readonly String _DbFileName;
@@ -47,6 +75,7 @@ namespace QueryProviderTest.Tests
         public QueryTests(ITestOutputHelper testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
+            _TestOutWriter = new TestOutTextWriter(testOutputHelper);
             _DbFileName = String.Join(String.Empty, Path.GetDirectoryName(typeof(QueryTests).Assembly.Location),
                 Path.DirectorySeparatorChar.ToString(), "QueryAdapter.Tests.", Guid.NewGuid().ToString(), ".db");
             _SqLiteConnectionString = "Data Source=" + _DbFileName;
@@ -132,7 +161,7 @@ namespace QueryProviderTest.Tests
         {
             IList list;
             using (DbConnection con = CreateSqLiteConnection()) {
-                Northwind db = new Northwind(con);
+                Northwind db = new Northwind(con, _TestOutWriter);
                 IQueryable<Customers> query =
                     db.Customers.Where(c => c.City == "London");
                 _testOutputHelper.WriteLine("Query:\n{0}\n", query);
@@ -195,7 +224,7 @@ namespace QueryProviderTest.Tests
             IList list;
             string str = "London";
             using (DbConnection con = CreateSqLiteConnection()) {
-                Northwind db = new Northwind(con);
+                Northwind db = new Northwind(con, _TestOutWriter);
                 IQueryable<Customers> query =
                     db.Customers.Where(c => c.City == str);
                  list = query.ToList();              
@@ -209,7 +238,7 @@ namespace QueryProviderTest.Tests
             IList list;
             string city = "London";
             using (DbConnection con = CreateSqLiteConnection()) {
-                Northwind db = new Northwind(con);
+                Northwind db = new Northwind(con, _TestOutWriter);
                var query = db.Customers.Where(c => c.City == city)
                             .Select(c => new {Name = c.ContactName, Phone = c.Phone});
                  list = query.ToList();              
@@ -225,7 +254,7 @@ namespace QueryProviderTest.Tests
             IList list;
             string city = "London";
             using (DbConnection con = CreateSqLiteConnection()) {
-                Northwind db = new Northwind(con);
+                Northwind db = new Northwind(con, _TestOutWriter);
                var query = db.Customers.Select(c => new {
                     Name = c.ContactName,
                     Location = new {
@@ -247,7 +276,7 @@ namespace QueryProviderTest.Tests
             IList list;
             string city = "London";
             using (DbConnection con = CreateSqLiteConnection()) {
-                Northwind db = new Northwind(con);
+                Northwind db = new Northwind(con, _TestOutWriter);
                 var query = from c in db.Customers
                             where c.City == city
                             select new {
@@ -256,6 +285,7 @@ namespace QueryProviderTest.Tests
                                          where o.CustomerID == c.CustomerID
                                          select o
                             };
+                _testOutputHelper.WriteLine("Query:\n{0}\n", query);
 
             /*    var query = from c in db.Orders
                             where c.OrderID == 1
@@ -272,8 +302,29 @@ namespace QueryProviderTest.Tests
             
             Assert.Equal(1, 1);          
         }
-     
-        public void Dispose()
+
+         [Fact]
+         public void Part6DirectOrderQuery() {
+             using (DbConnection con = CreateSqLiteConnection())
+             {
+                 DbCommand cmd = con.CreateCommand();
+                 cmd.CommandText = "SELECT OrderId, OrderDate FROM (SELECT * FROM Orders) AS T ";
+                 DbDataReader reader = cmd.ExecuteReader();
+                 var count = 0;
+                 while (reader.Read()) {
+                     var ct0 = reader.GetFieldType(0); 
+                     var ct = reader.GetFieldType(1);
+//                     Int64 orderId = (Int64) reader.GetValue(0);
+                     Assert.Equal(typeof(Int64), ct0);
+                     Assert.Equal(typeof(String), ct);
+ //                    DateTime orderDate = (DateTime) reader.GetValue(1);
+                     count++;
+                 }
+
+             }
+         }
+
+         public void Dispose()
         {
             _XpoDataLayer?.Dispose();
             if(System.IO.File.Exists(_DbFileName))

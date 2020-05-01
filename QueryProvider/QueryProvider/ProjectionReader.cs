@@ -11,6 +11,11 @@ namespace QueryProviderTest {
 
     public abstract class ProjectionRow {
         public abstract object GetValue(int index);
+
+        public object GetValueDateTime(int index) {
+            var str_value = (String) GetValue(index);
+            return DateTime.Parse(str_value);
+        }
         public abstract IEnumerable<E> ExecuteSubQuery<E>(LambdaExpression query);
     }
 
@@ -18,11 +23,13 @@ namespace QueryProviderTest {
         ParameterExpression row;
         string rowAlias;
         static MethodInfo miGetValue;
+        static MethodInfo miGetValueDateTime;
         static MethodInfo miExecuteSubQuery;
         
         internal ProjectionBuilder() {
             if (miGetValue == null) {
-                miGetValue = typeof(ProjectionRow).GetMethod("GetValue");
+                miGetValue = typeof(ProjectionRow).GetMethod(nameof(ProjectionRow.GetValue));
+                miGetValueDateTime = typeof(ProjectionRow).GetMethod(nameof(ProjectionRow.GetValueDateTime));
                 miExecuteSubQuery = typeof(ProjectionRow).GetMethod("ExecuteSubQuery");
             }
         }
@@ -36,6 +43,8 @@ namespace QueryProviderTest {
 
         protected override Expression VisitColumn(ColumnExpression column) {
             if (column.Alias == this.rowAlias) {
+                if (column.Type == typeof(DateTime))
+                    return Expression.Convert(Expression.Call(this.row, miGetValueDateTime, Expression.Constant(column.Ordinal)), column.Type);
                 return Expression.Convert(Expression.Call(this.row, miGetValue, Expression.Constant(column.Ordinal)), column.Type);
             }
             return column;
