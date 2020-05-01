@@ -12,8 +12,9 @@ using System.Collections.Generic;
 using System.Collections;
 
 namespace QueryProviderTest.Tests
-{
-    public class TestData
+ {
+
+   public class TestData
     {
         
     }
@@ -47,7 +48,7 @@ namespace QueryProviderTest.Tests
         {
             _testOutputHelper = testOutputHelper;
             _DbFileName = String.Join(String.Empty, Path.GetDirectoryName(typeof(QueryTests).Assembly.Location),
-                Path.DirectorySeparatorChar.ToString(), "IntecoAG.XpoExt.QueryAdapter.Tests.", Guid.NewGuid().ToString(), ".db");
+                Path.DirectorySeparatorChar.ToString(), "QueryAdapter.Tests.", Guid.NewGuid().ToString(), ".db");
             _SqLiteConnectionString = "Data Source=" + _DbFileName;
             _XpoDataLayer = XpoDefault.GetDataLayer("XpoProvider=SQLite;" + _SqLiteConnectionString, AutoCreateOption.DatabaseAndSchema);
             using (UnitOfWork uow = CreateXpoUnitOfWork()) {
@@ -85,6 +86,28 @@ namespace QueryProviderTest.Tests
                 customer5.Country = "USSA";
                 customer5.Phone = "668";
                 customer5.ContactName = "mmme";
+
+
+                Orders order1 = new Orders(uow);
+                order1.OrderID = 1;
+                order1.CustomerID = customer.CustomerID;
+                order1.OrderDate = new DateTime(2019,1,15);
+
+                Orders order2 = new Orders(uow);
+                order2.OrderID = 2;
+                order2.CustomerID = customer2.CustomerID;
+                order2.OrderDate = new DateTime(2019,1,15);
+
+                Orders order3 = new Orders(uow);
+                order3.OrderID = 3;
+                order3.CustomerID = customer3.CustomerID;
+                order3.OrderDate = new DateTime(2019,1,15);
+
+                Orders order4 = new Orders(uow);
+                order4.OrderID = 4;
+                order4.CustomerID = customer4.CustomerID;
+                order4.OrderDate = new DateTime(2019,1,15);
+
 
                 uow.CommitChanges();
             }
@@ -190,10 +213,7 @@ namespace QueryProviderTest.Tests
                var query = db.Customers.Where(c => c.City == city)
                             .Select(c => new {Name = c.ContactName, Phone = c.Phone});
                  list = query.ToList();              
-              /*   foreach(var el in list)
-                 {
-                     Console.WriteLine($"{0}",el);
-                 }*/
+           
             }   
             
             Assert.Equal(2, list.Count);          
@@ -215,13 +235,42 @@ namespace QueryProviderTest.Tests
                      })
                 .Where(x => x.Location.City == city);
                  list = query.ToList();              
-                /* foreach(var el in list)
-                 {
-                     Console.WriteLine($"{0}",el);
-                 }*/
+              
             }   
             
             Assert.Equal(2, list.Count);          
+        }
+        
+         [Fact]
+        public void Part06Query()
+        {
+            IList list;
+            string city = "London";
+            using (DbConnection con = CreateSqLiteConnection()) {
+                Northwind db = new Northwind(con);
+                var query = from c in db.Customers
+                            where c.City == city
+                            select new {
+                                Name = c.ContactName,
+                                Ords = from o in db.Orders
+                                         where o.CustomerID == c.CustomerID
+                                         select o
+                            };
+
+            /*    var query = from c in db.Orders
+                            where c.OrderID == 1
+                            select new {
+                                id = c.OrderID,
+                                Custs = from o in db.Customers
+                                         where o.CustomerID == c.CustomerID
+                                         select o
+                            };*/
+
+                 list = query.ToList();              
+               
+            }   
+            
+            Assert.Equal(1, 1);          
         }
      
         public void Dispose()
@@ -239,7 +288,7 @@ namespace QueryProviderTest.Tests
                     return;
                 }
             }
-            
+          
         }
     }
 }

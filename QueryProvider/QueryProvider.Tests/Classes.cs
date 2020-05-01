@@ -12,6 +12,7 @@ using DevExpress.Xpo;
 
 namespace QueryProviderTest
 {
+   
 public class Customers: XPLiteObject {
         [Key]
         public string CustomerID;
@@ -25,7 +26,7 @@ public class Customers: XPLiteObject {
     }
     public class Orders: XPLiteObject {
         [Key]
-        public int OrderID;
+        public Int64 OrderID;
         public string CustomerID;
         public DateTime OrderDate;
 
@@ -33,21 +34,22 @@ public class Customers: XPLiteObject {
         public Orders(Session session) : base(session) { }
     }
 
- public class Northwind {
-        public Query<Customers> Customers;
-        public Query<Orders> Orders;
+public class Northwind {
 
-        private DbQueryProvider provider;
-        public Northwind(DbConnection connection) {
-            this.provider = new DbQueryProvider(connection);
-            this.Customers = new Query<Customers>(this.provider);
-            this.Orders = new Query<Orders>(this.provider);
-        }
+    public Query<Customers> Customers;
 
-        public TextWriter Log {
-            get { return this.provider.Log; }
-            set { this.provider.Log = value; }
-        }
+    public Query<Orders> Orders;
+
+    public Northwind(DbConnection connection) {
+
+        QueryProvider provider = new DbQueryProvider(connection);
+
+        this.Customers = new Query<Customers>(provider);
+
+        this.Orders = new Query<Orders>(provider);
+
     }
+
+}
 
 }
