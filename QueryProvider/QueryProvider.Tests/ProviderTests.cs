@@ -286,24 +286,14 @@ namespace QueryProviderTest.Tests
                                          select o
                             };
                 _testOutputHelper.WriteLine("Query:\n{0}\n", query);
-
-            /*    var query = from c in db.Orders
-                            where c.OrderID == 1
-                            select new {
-                                id = c.OrderID,
-                                Custs = from o in db.Customers
-                                         where o.CustomerID == c.CustomerID
-                                         select o
-                            };*/
-
                  list = query.ToList();              
                
             }   
             
-            Assert.Equal(1, 1);          
+            Assert.Equal(2, list.Count);          
         }
 
-         [Fact]
+       /*  [Fact]
          public void Part6DirectOrderQuery() {
              using (DbConnection con = CreateSqLiteConnection())
              {
@@ -322,7 +312,54 @@ namespace QueryProviderTest.Tests
                  }
 
              }
-         }
+         }*/
+
+         [Fact]
+        public void Part07JoinQuery()
+        {
+            IList list;
+            using (DbConnection con = CreateSqLiteConnection()) {
+                Northwind db = new Northwind(con, _TestOutWriter);
+                 var query = from c in db.Customers
+            where c.CustomerID == "2"
+            from o in db.Orders
+            where c.CustomerID == o.CustomerID
+            select new { c.ContactName, o.OrderDate };
+             //   _testOutputHelper.WriteLine("Query:\n{0}\n", query);
+                 list = query.ToList();              
+               
+            }   
+            
+            Assert.Equal(1, list.Count);          
+        }
+        
+        [Fact]
+        public void Part07SelectManyQuery()
+        {
+            //IEnumerable en;
+            IList list;
+            int c=0;
+            using (DbConnection con = CreateSqLiteConnection()) {
+                Northwind db = new Northwind(con, _TestOutWriter);
+               var query = db.Customers
+              .Where(c => c.CustomerID == "2")
+              .SelectMany(
+                 c => db.Orders.Where(o => c.CustomerID == o.CustomerID),
+                 (c, o) => new { c.ContactName, o.OrderDate }
+                 );
+                 //list = query.ToList();
+                 c = query.Count();
+             //   _testOutputHelper.WriteLine("Query:\n{0}\n", query);
+               //  _testOutputHelper.WriteLine("mememem");
+            //     foreach (var item in query) {
+           //          _testOutputHelper.WriteLine("item:\n{0}\n", item);
+            //    }           
+               
+            }   
+            
+            Assert.Equal(1, 1);          
+        }
+        
 
          public void Dispose()
         {

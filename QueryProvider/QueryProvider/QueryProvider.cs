@@ -9,7 +9,7 @@ using System.Text;
 namespace QueryProviderTest {
 
     public abstract class QueryProvider : IQueryProvider {
-        protected QueryProvider() {
+                protected QueryProvider() {
         }
 
         IQueryable<S> IQueryProvider.CreateQuery<S>(Expression expression) {

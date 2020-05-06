@@ -12,7 +12,8 @@ namespace QueryProviderTest {
         Table = 1000, // make sure these don't overlap with ExpressionType
         Column,
         Select,
-        Projection
+        Projection,
+        Join
     }
 
     internal static class DbExpressionExtensions {
@@ -130,6 +131,8 @@ namespace QueryProviderTest {
                     return this.VisitColumn((ColumnExpression)exp);
                 case DbExpressionType.Select:
                     return this.VisitSelect((SelectExpression)exp);
+                case DbExpressionType.Join:
+                    return this.VisitJoin((JoinExpression)exp);
                 case DbExpressionType.Projection:
                     return this.VisitProjection((ProjectionExpression)exp);
                 default:
@@ -150,6 +153,15 @@ namespace QueryProviderTest {
                 return new SelectExpression(select.Type, select.Alias, columns, from, where);
             }
             return select;
+        }
+        protected virtual Expression VisitJoin(JoinExpression join) {
+            Expression left = this.Visit(join.Left);
+            Expression right = this.Visit(join.Right);
+            Expression condition = this.Visit(join.Condition);
+            if (left != join.Left || right != join.Right || condition != join.Condition) {
+                return new JoinExpression(join.Type, join.Join, left, right, condition);
+            }
+            return join;
         }
         protected virtual Expression VisitSource(Expression source) {
             return this.Visit(source);
