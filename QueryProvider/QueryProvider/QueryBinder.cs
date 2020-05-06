@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -13,9 +14,9 @@ namespace QueryProviderTest{
         int aliasCount;
         IQueryProvider provider;
 
-        internal QueryBinder(IQueryProvider provider) {
+        internal QueryBinder(IQueryProvider provider, TextWriter logger): base(logger) {
             this.provider = provider;
-            this.columnProjector = new ColumnProjector(this.CanBeColumn);
+            this.columnProjector = new ColumnProjector(this.CanBeColumn, Logger);
         }
 
         private bool CanBeColumn(Expression expression) {
@@ -106,7 +107,8 @@ namespace QueryProviderTest{
             ProjectionExpression projection = (ProjectionExpression)this.Visit(source);
             this.map[collectionSelector.Parameters[0]] = projection.Projector;
             ProjectionExpression collectionProjection = (ProjectionExpression)this.Visit(collectionSelector.Body);
-            JoinType joinType = IsTable(collectionSelector.Body) ? JoinType.CrossJoin : JoinType.CrossApply;
+//            JoinType joinType = IsTable(collectionSelector.Body) ? JoinType.CrossJoin : JoinType.CrossApply;
+            JoinType joinType = IsTable(collectionSelector.Body) ? JoinType.CrossJoin : JoinType.InnerJoin;
             JoinExpression join = new JoinExpression(resultType, joinType, projection.Source, collectionProjection.Source, null);
             string alias = this.GetNextAlias();
             ProjectedColumns pc;

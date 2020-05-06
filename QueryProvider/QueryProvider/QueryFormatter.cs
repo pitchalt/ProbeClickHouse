@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -11,7 +12,7 @@ namespace QueryProviderTest {
         int indent = 2;
         int depth;
 
-        internal QueryFormatter() {
+        internal QueryFormatter(TextWriter logger): base(logger) {
         }
 
         internal string Format(Expression expression) {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -8,6 +9,9 @@ namespace QueryProviderTest {
     internal class Replacer : DbExpressionVisitor {
         Expression searchFor;
         Expression replaceWith;
+
+        internal Replacer(TextWriter logger) : base(logger) { }
+
         internal Expression Replace(Expression expression, Expression searchFor, Expression replaceWith) {
             this.searchFor = searchFor;
             this.replaceWith = replaceWith;

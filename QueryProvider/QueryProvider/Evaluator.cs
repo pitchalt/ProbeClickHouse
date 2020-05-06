@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -12,8 +13,8 @@ namespace QueryProviderTest {
         /// <param name="expression">The root of the expression tree.</param>
         /// <param name="fnCanBeEvaluated">A function that decides whether a given expression node can be part of the local function.</param>
         /// <returns>A new tree with sub-trees evaluated and replaced.</returns>
-        public static Expression PartialEval(Expression expression, Func<Expression, bool> fnCanBeEvaluated) {
-            return new SubtreeEvaluator(new Nominator(fnCanBeEvaluated).Nominate(expression)).Eval(expression);
+        public static Expression PartialEval(Expression expression, Func<Expression, bool> fnCanBeEvaluated, TextWriter logger) {
+            return new SubtreeEvaluator(new Nominator(fnCanBeEvaluated, logger).Nominate(expression), logger).Eval(expression);
         }
 
         /// <summary>
@@ -21,8 +22,8 @@ namespace QueryProviderTest {
         /// </summary>
         /// <param name="expression">The root of the expression tree.</param>
         /// <returns>A new tree with sub-trees evaluated and replaced.</returns>
-        public static Expression PartialEval(Expression expression) {
-            return PartialEval(expression, Evaluator.CanBeEvaluatedLocally);
+        public static Expression PartialEval(Expression expression, TextWriter logger) {
+            return PartialEval(expression, Evaluator.CanBeEvaluatedLocally, logger);
         }
 
         private static bool CanBeEvaluatedLocally(Expression expression) {
@@ -35,7 +36,7 @@ namespace QueryProviderTest {
         class SubtreeEvaluator: DbExpressionVisitor {
             HashSet<Expression> candidates;
 
-            internal SubtreeEvaluator(HashSet<Expression> candidates) {
+            internal SubtreeEvaluator(HashSet<Expression> candidates, TextWriter logger): base(logger) {
                 this.candidates = candidates;
             }
 
@@ -72,7 +73,7 @@ namespace QueryProviderTest {
             HashSet<Expression> candidates;
             bool cannotBeEvaluated;
 
-            internal Nominator(Func<Expression, bool> fnCanBeEvaluated) {
+            internal Nominator(Func<Expression, bool> fnCanBeEvaluated, TextWriter logger): base(logger) {
                 this.fnCanBeEvaluated = fnCanBeEvaluated;
             }
 

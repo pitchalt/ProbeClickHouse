@@ -347,7 +347,7 @@ namespace QueryProviderTest.Tests
                  c => db.Orders.Where(o => c.CustomerID == o.CustomerID),
                  (c, o) => new { c.ContactName, o.OrderDate }
                  );
-                 //list = query.ToList();
+                 list = query.ToList();
                  c = query.Count();
              //   _testOutputHelper.WriteLine("Query:\n{0}\n", query);
                //  _testOutputHelper.WriteLine("mememem");

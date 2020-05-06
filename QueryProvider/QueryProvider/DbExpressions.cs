@@ -2,8 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Security.Authentication.ExtendedProtection;
 using System.Text;
 
 namespace QueryProviderTest {
@@ -120,11 +122,18 @@ namespace QueryProviderTest {
     }
 
     internal class DbExpressionVisitor : ExpressionVisitor {
+
+        protected DbExpressionVisitor(TextWriter logger) : base(logger) { }
+
         protected override Expression Visit(Expression exp) {
             if (exp == null) {
                 return null;
             }
-            switch ((DbExpressionType)exp.NodeType) {
+
+            var nodeType = (DbExpressionType) exp.NodeType;
+            if (nodeType >= DbExpressionType.Table)
+                Logger.WriteLine("Visit: " + this.GetType().FullName + " DbExpNodeType " + nodeType.ToString());
+            switch (nodeType) {
                 case DbExpressionType.Table:
                     return this.VisitTable((TableExpression)exp);
                 case DbExpressionType.Column:

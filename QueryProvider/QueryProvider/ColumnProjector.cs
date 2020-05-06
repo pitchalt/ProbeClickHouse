@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -32,8 +33,8 @@ namespace QueryProviderTest {
         string newAlias;
         int iColumn;
 
-        internal ColumnProjector(Func<Expression, bool> fnCanBeColumn) {
-            this.nominator = new Nominator(fnCanBeColumn);
+        internal ColumnProjector(Func<Expression, bool> fnCanBeColumn, TextWriter logger): base(logger) {
+            this.nominator = new Nominator(fnCanBeColumn, Logger);
         }
 
         internal ProjectedColumns ProjectColumns(Expression expression, string newAlias, params string[] existingAliases) {
@@ -100,7 +101,7 @@ namespace QueryProviderTest {
             bool isBlocked;
             HashSet<Expression> candidates;
 
-            internal Nominator(Func<Expression, bool> fnCanBeColumn) {
+            internal Nominator(Func<Expression, bool> fnCanBeColumn, TextWriter logger): base(logger) {
                 this.fnCanBeColumn = fnCanBeColumn;
             }
 

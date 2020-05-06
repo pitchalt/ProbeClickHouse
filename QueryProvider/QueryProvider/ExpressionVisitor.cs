@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace QueryProviderTest {
 
     public abstract class ExpressionVisitor {
-        protected ExpressionVisitor() {
+
+        protected readonly TextWriter Logger;
+        protected ExpressionVisitor(TextWriter logger) {
+            Logger = logger;
         }
 
         protected virtual Expression Visit(Expression exp) {
             if (exp == null)
                 return exp;
+            Logger.WriteLine("Visit: " + this.GetType().FullName + " NodeType " + exp.NodeType.ToString());
             switch (exp.NodeType) {
                 case ExpressionType.Negate:
                 case ExpressionType.NegateChecked:

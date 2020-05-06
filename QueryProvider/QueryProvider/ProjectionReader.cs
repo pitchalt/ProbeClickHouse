@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -26,7 +27,7 @@ namespace QueryProviderTest {
         static MethodInfo miGetValueDateTime;
         static MethodInfo miExecuteSubQuery;
         
-        internal ProjectionBuilder() {
+        internal ProjectionBuilder(TextWriter logger): base(logger) {
             if (miGetValue == null) {
                 miGetValue = typeof(ProjectionRow).GetMethod(nameof(ProjectionRow.GetValue));
                 miGetValueDateTime = typeof(ProjectionRow).GetMethod(nameof(ProjectionRow.GetValueDateTime));
@@ -64,8 +65,10 @@ namespace QueryProviderTest {
     internal class ProjectionReader<T> : IEnumerable<T>, IEnumerable {
         Enumerator enumerator;
 
-        internal ProjectionReader(DbDataReader reader, Func<ProjectionRow, T> projector, IQueryProvider provider) {
-            this.enumerator = new Enumerator(reader, projector, provider);
+        protected readonly TextWriter Logger;
+        internal ProjectionReader(DbDataReader reader, Func<ProjectionRow, T> projector, IQueryProvider provider, TextWriter logger) {
+            Logger = logger;
+            this.enumerator = new Enumerator(reader, projector, provider, logger);
         }
 
         public IEnumerator<T> GetEnumerator() {
@@ -87,10 +90,12 @@ namespace QueryProviderTest {
             Func<ProjectionRow, T> projector;
             IQueryProvider provider;
 
-            internal Enumerator(DbDataReader reader, Func<ProjectionRow, T> projector, IQueryProvider provider) {
+            protected readonly TextWriter Logger;
+            internal Enumerator(DbDataReader reader, Func<ProjectionRow, T> projector, IQueryProvider provider, TextWriter logger) {
                 this.reader = reader;
                 this.projector = projector;
                 this.provider = provider;
+                Logger = logger;
             }
 
             public override object GetValue(int index) {
@@ -106,8 +111,8 @@ namespace QueryProviderTest {
             }
 
             public override IEnumerable<E> ExecuteSubQuery<E>(LambdaExpression query) {
-                ProjectionExpression projection = (ProjectionExpression) new Replacer().Replace(query.Body, query.Parameters[0], Expression.Constant(this));
-                projection = (ProjectionExpression) Evaluator.PartialEval(projection, CanEvaluateLocally);
+                ProjectionExpression projection = (ProjectionExpression) new Replacer(Logger).Replace(query.Body, query.Parameters[0], Expression.Constant(this));
+                projection = (ProjectionExpression) Evaluator.PartialEval(projection, CanEvaluateLocally, Logger);
                 IEnumerable<E> result = (IEnumerable<E>)this.provider.Execute(projection);
                 List<E> list = new List<E>(result);
                 if (typeof(IQueryable<E>).IsAssignableFrom(query.Body.Type)) {
