@@ -105,7 +105,7 @@ namespace QueryProviderTest.Tests
                 Customers customer4 = new Customers(uow);
                 customer4.CustomerID = "4";
                 customer4.City = "Saratov";
-                customer4.Country = "USA";
+                customer4.Country = "USSA";
                 customer4.Phone = "662";
                 customer4.ContactName = "mevk";
 
@@ -293,7 +293,7 @@ namespace QueryProviderTest.Tests
             Assert.Equal(2, list.Count);          
         }
 
-       /*  [Fact]
+         [Fact]
          public void Part6DirectOrderQuery() {
              using (DbConnection con = CreateSqLiteConnection())
              {
@@ -312,7 +312,7 @@ namespace QueryProviderTest.Tests
                  }
 
              }
-         }*/
+         }
 
          [Fact]
         public void Part07JoinQuery()
@@ -332,7 +332,7 @@ namespace QueryProviderTest.Tests
             
             Assert.Equal(1, list.Count);          
         }
-        
+        /*
         [Fact]
         public void Part07SelectManyQuery()
         {
@@ -359,7 +359,28 @@ namespace QueryProviderTest.Tests
             
             Assert.Equal(1, 1);          
         }
-        
+        */
+
+
+
+         [Fact]
+        public void Part08OrderQuery()
+        {
+            IList list;
+            using (DbConnection con = CreateSqLiteConnection()) {
+                Northwind db = new Northwind(con, _TestOutWriter);
+                 var query = from c in db.Customers
+                orderby c.City
+                where c.Country == "USSA"
+                select new { c.City, c.ContactName };
+                _testOutputHelper.WriteLine("Query:\n{0}\n", query);
+                 list = query.ToList(); 
+                    
+               
+            }   
+            
+            Assert.Equal(2, list.Count);          
+        }    
 
          public void Dispose()
         {

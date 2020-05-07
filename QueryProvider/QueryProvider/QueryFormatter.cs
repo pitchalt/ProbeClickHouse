@@ -11,8 +11,9 @@ namespace QueryProviderTest {
         StringBuilder sb;
         int indent = 2;
         int depth;
-
+    TextWriter _logger;
         internal QueryFormatter(TextWriter logger): base(logger) {
+            _logger = logger;
         }
 
         internal string Format(Expression expression) {
@@ -131,7 +132,7 @@ namespace QueryProviderTest {
             return column;
         }
 
-        protected override Expression VisitSelect(SelectExpression select) {
+        protected override Expression VisitSelect(SelectExpression select, TextWriter logger) {
             sb.Append("SELECT ");
             for (int i = 0, n = select.Columns.Count; i < n; i++) {
                 ColumnDeclaration column = select.Columns[i];
@@ -153,6 +154,20 @@ namespace QueryProviderTest {
                 this.AppendNewLine(Indentation.Same);
                 sb.Append("WHERE ");
                 this.Visit(select.Where);
+            }
+            if (select.OrderBy != null && select.OrderBy.Count > 0) {
+                this.AppendNewLine(Indentation.Same);
+                sb.Append("ORDER BY ");
+                for (int i = 0, n = select.OrderBy.Count; i < n; i++) {
+                    OrderExpression exp = select.OrderBy[i];
+                    if (i > 0) {
+                        sb.Append(", ");
+                    }
+                    this.Visit(exp.Expression);
+                    if (exp.OrderType != OrderType.Ascending) {
+                        sb.Append(" DESC");
+                    }
+                }
             }
             return select;
         }

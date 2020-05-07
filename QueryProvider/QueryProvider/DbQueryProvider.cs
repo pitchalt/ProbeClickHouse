@@ -61,13 +61,16 @@ namespace QueryProviderTest {
         private TranslateResult Translate(Expression expression) {
             ProjectionExpression projection = expression as ProjectionExpression;
             if (projection == null) {
-                expression = Evaluator.PartialEval(expression, CanBeEvaluatedLocally, Log);
-                projection = (ProjectionExpression)new QueryBinder(this, Log).Bind(expression);
+                expression = Evaluator.PartialEval(expression, CanBeEvaluatedLocally, log);
+                expression = new QueryBinder(this, log).Bind(expression);
+                expression = new OrderByRewriter(log).Rewrite(expression);
+                projection = (ProjectionExpression)expression;
             }
-            string commandText = new QueryFormatter(Log).Format(projection.Source);
-            LambdaExpression projector = new ProjectionBuilder(Log).Build(projection.Projector, projection.Source.Alias);
+            string commandText = new QueryFormatter(log).Format(projection.Source);
+            LambdaExpression projector = new ProjectionBuilder(log).Build(projection.Projector, projection.Source.Alias);
             return new TranslateResult { CommandText = commandText, Projector = projector };
         }
+
 
         private static bool CanBeEvaluatedLocally(Expression expression) {
             return expression.NodeType != ExpressionType.Parameter &&

@@ -81,7 +81,10 @@ namespace QueryProviderTest {
         ReadOnlyCollection<ColumnDeclaration> columns;
         Expression from;
         Expression where;
-        internal SelectExpression(Type type, string alias, IEnumerable<ColumnDeclaration> columns, Expression from, Expression where)
+        ReadOnlyCollection<OrderExpression> orderBy;
+         internal SelectExpression(
+            Type type, string alias, IEnumerable<ColumnDeclaration> columns, 
+            Expression from, Expression where, IEnumerable<OrderExpression> orderBy)
             : base((ExpressionType)DbExpressionType.Select, type) {
             this.alias = alias;
             this.columns = columns as ReadOnlyCollection<ColumnDeclaration>;
@@ -90,6 +93,18 @@ namespace QueryProviderTest {
             }
             this.from = from;
             this.where = where;
+            this.orderBy = orderBy as ReadOnlyCollection<OrderExpression>;
+            if (this.orderBy == null && orderBy != null) {
+                this.orderBy = new List<OrderExpression>(orderBy).AsReadOnly();
+            }
+        }
+        internal SelectExpression(
+            Type type, string alias, IEnumerable<ColumnDeclaration> columns, 
+            Expression from, Expression where)
+            : this(type, alias, columns, from, where, null) {
+        }
+         internal ReadOnlyCollection<OrderExpression> OrderBy {
+            get { return this.orderBy; }
         }
         internal string Alias {
             get { return this.alias; }
@@ -122,8 +137,10 @@ namespace QueryProviderTest {
     }
 
     internal class DbExpressionVisitor : ExpressionVisitor {
-
-        protected DbExpressionVisitor(TextWriter logger) : base(logger) { }
+        TextWriter _logger;
+        protected DbExpressionVisitor(TextWriter logger) : base(logger) {
+            _logger = logger;
+         }
 
         protected override Expression Visit(Expression exp) {
             if (exp == null) {
@@ -139,7 +156,7 @@ namespace QueryProviderTest {
                 case DbExpressionType.Column:
                     return this.VisitColumn((ColumnExpression)exp);
                 case DbExpressionType.Select:
-                    return this.VisitSelect((SelectExpression)exp);
+                    return this.VisitSelect((SelectExpression)exp, _logger);
                 case DbExpressionType.Join:
                     return this.VisitJoin((JoinExpression)exp);
                 case DbExpressionType.Projection:
@@ -154,14 +171,34 @@ namespace QueryProviderTest {
         protected virtual Expression VisitColumn(ColumnExpression column) {
             return column;
         }
-        protected virtual Expression VisitSelect(SelectExpression select) {
+       protected virtual Expression VisitSelect(SelectExpression select,TextWriter logger) {
             Expression from = this.VisitSource(select.From);
             Expression where = this.Visit(select.Where);
             ReadOnlyCollection<ColumnDeclaration> columns = this.VisitColumnDeclarations(select.Columns);
-            if (from != select.From || where != select.Where || columns != select.Columns) {
-                return new SelectExpression(select.Type, select.Alias, columns, from, where);
+            ReadOnlyCollection<OrderExpression> orderBy = this.VisitOrderBy(select.OrderBy);
+            if (from != select.From || where != select.Where || columns != select.Columns || orderBy != select.OrderBy) {
+                return new SelectExpression(select.Type, select.Alias, columns, from, where, orderBy);
             }
             return select;
+        }
+        protected ReadOnlyCollection<OrderExpression> VisitOrderBy(ReadOnlyCollection<OrderExpression> expressions) {
+            if (expressions != null) {
+                List<OrderExpression> alternate = null;
+                for (int i = 0, n = expressions.Count; i < n; i++) {
+                    OrderExpression expr = expressions[i];
+                    Expression e = this.Visit(expr.Expression);
+                    if (alternate == null && e != expr.Expression) {
+                        alternate = expressions.Take(i).ToList();
+                    }
+                    if (alternate != null) {
+                        alternate.Add(new OrderExpression(expr.OrderType, e));
+                    }
+                }
+                if (alternate != null) {
+                    return alternate.AsReadOnly();
+                }
+            }
+            return expressions;
         }
         protected virtual Expression VisitJoin(JoinExpression join) {
             Expression left = this.Visit(join.Left);
