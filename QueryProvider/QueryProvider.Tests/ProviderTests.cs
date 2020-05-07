@@ -382,6 +382,28 @@ namespace QueryProviderTest.Tests
             Assert.Equal(2, list.Count);          
         }    
 
+        [Fact]
+        public void Part09RemoveQuery()
+        {
+            IList list;
+            using (DbConnection con = CreateSqLiteConnection()) {
+                Northwind db = new Northwind(con, _TestOutWriter);
+                var query = from c in db.Customers
+            join o in db.Orders on c.CustomerID equals o.CustomerID
+            let m = c.Phone
+            orderby c.City
+            where c.Country == "USSA"
+            where m != "555-5555"
+            select new { c.City, c.ContactName } into x
+            where x.City == "Sizran"
+            select x;
+                _testOutputHelper.WriteLine("Query:\n{0}\n", query);
+                 list = query.ToList(); 
+            }   
+            
+            Assert.Equal(0, list.Count);          
+        }    
+
          public void Dispose()
         {
             _XpoDataLayer?.Dispose();
