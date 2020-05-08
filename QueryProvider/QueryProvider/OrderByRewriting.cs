@@ -15,9 +15,7 @@ namespace QueryProviderTest {
      internal class OrderByRewriter : DbExpressionVisitor {
         IEnumerable<OrderExpression> gatheredOrderings;
         bool isOuterMostSelect;
-        TextWriter _logger;
         public OrderByRewriter(TextWriter logger) : base (logger){
-            _logger = logger;
         }
 
         public Expression Rewrite(Expression expression) {
@@ -25,11 +23,11 @@ namespace QueryProviderTest {
             return this.Visit(expression);
         }
 
-        protected override Expression VisitSelect(SelectExpression select,TextWriter logger) {
+        protected override Expression VisitSelect(SelectExpression select) {
             bool saveIsOuterMostSelect = this.isOuterMostSelect;
             try {
                 this.isOuterMostSelect = false;
-                select = (SelectExpression)base.VisitSelect(select,_logger);
+                select = (SelectExpression)base.VisitSelect(select);
                 bool hasOrderBy = select.OrderBy != null && select.OrderBy.Count > 0;
                 if (hasOrderBy) {
                     this.PrependOrderings(select.OrderBy);
@@ -40,7 +38,7 @@ namespace QueryProviderTest {
                 ReadOnlyCollection<ColumnDeclaration> columns = select.Columns;
                 if (this.gatheredOrderings != null) {
                     if (canPassOnOrderings) {
-                        HashSet<string> producedAliases = new AliasesProduced(logger).Gather(select.From);
+                        HashSet<string> producedAliases = new AliasesProduced(Logger).Gather(select.From);
                         // reproject order expressions using this select's alias so the outer select will have properly formed expressions
                         BindResult project = this.RebindOrderings(this.gatheredOrderings, select.Alias, producedAliases, select.Columns);
                         this.gatheredOrderings = project.Orderings;
@@ -159,17 +157,14 @@ namespace QueryProviderTest {
 
       internal class AliasesProduced : DbExpressionVisitor {
         HashSet<string> aliases;
-        TextWriter _logger;
-        public AliasesProduced(TextWriter logger) : base (logger){
-            _logger = logger;
-        }
+        public AliasesProduced(TextWriter logger) : base (logger){ }
         public HashSet<string> Gather(Expression source) {
             this.aliases = new HashSet<string>();
             this.Visit(source);
             return this.aliases;
         }
 
-        protected override Expression VisitSelect(SelectExpression select, TextWriter logger) {
+        protected override Expression VisitSelect(SelectExpression select) {
             this.aliases.Add(select.Alias);
             return select;
         }

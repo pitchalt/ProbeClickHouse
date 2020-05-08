@@ -30,7 +30,7 @@ namespace QueryProviderTest {
             return this.Visit(outerSelect);
         }
 
-        protected override Expression VisitSelect(SelectExpression select,TextWriter logger)
+        protected override Expression VisitSelect(SelectExpression select)
         {
             if (this.selectsToRemove.Contains(select))
             {
@@ -38,7 +38,7 @@ namespace QueryProviderTest {
             }
             else
             {
-                return base.VisitSelect(select, logger);
+                return base.VisitSelect(select);
             }
         }
 

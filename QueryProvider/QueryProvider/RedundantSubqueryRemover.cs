@@ -10,25 +10,22 @@ using System.Text;
 namespace QueryProviderTest {
     internal class RedundantSubqueryRemover : DbExpressionVisitor
     {
-        TextWriter _logger;
-        internal RedundantSubqueryRemover(TextWriter logger): base(logger) {
-            _logger = logger;
-        }
+        internal RedundantSubqueryRemover(TextWriter logger): base(logger) { }
 
         internal Expression Remove(Expression expression)
         {
             return this.Visit(expression);
         }
 
-        protected override Expression VisitSelect(SelectExpression select,TextWriter logger)
+        protected override Expression VisitSelect(SelectExpression select)
         {
-            select = (SelectExpression)base.VisitSelect(select,logger);
+            select = (SelectExpression)base.VisitSelect(select);
 
             // first remove all purely redundant subqueries
-            List<SelectExpression> redundant = new RedundantSubqueryGatherer(logger).Gather(select.From);
+            List<SelectExpression> redundant = new RedundantSubqueryGatherer(Logger).Gather(select.From);
             if (redundant != null)
             {
-                select = (SelectExpression)new SubqueryRemover(logger).Remove(select, redundant);
+                select = (SelectExpression)new SubqueryRemover(Logger).Remove(select, redundant);
             }
 
             // next attempt to merge subqueries
@@ -41,7 +38,7 @@ namespace QueryProviderTest {
                 if (HasSimpleProjection(fromSelect))
                 {
                     // remove the redundant subquery
-                    select = (SelectExpression)new SubqueryRemover(logger).Remove(select, fromSelect);
+                    select = (SelectExpression)new SubqueryRemover(Logger).Remove(select, fromSelect);
                     // merge where expressions 
                     Expression where = select.Where;
                     if (fromSelect.Where != null)
@@ -88,10 +85,8 @@ namespace QueryProviderTest {
 
         class RedundantSubqueryGatherer : DbExpressionVisitor
         {
-             TextWriter _logger;
-        internal RedundantSubqueryGatherer(TextWriter logger): base(logger) {
-            _logger = logger;
-        }
+            internal RedundantSubqueryGatherer(TextWriter logger): base(logger) {
+            }
 
             List<SelectExpression> redundant;
 
@@ -101,7 +96,7 @@ namespace QueryProviderTest {
                 return this.redundant;
             }
 
-            protected override Expression VisitSelect(SelectExpression select,TextWriter logger)
+            protected override Expression VisitSelect(SelectExpression select)
             {
                 if (IsRedudantSubquery(select))
                 {

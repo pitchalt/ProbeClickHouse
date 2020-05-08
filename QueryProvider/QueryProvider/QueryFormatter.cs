@@ -132,7 +132,7 @@ namespace QueryProviderTest {
             return column;
         }
 
-        protected override Expression VisitSelect(SelectExpression select, TextWriter logger) {
+        protected override Expression VisitSelect(SelectExpression select) {
             sb.Append("SELECT ");
             for (int i = 0, n = select.Columns.Count; i < n; i++) {
                 ColumnDeclaration column = select.Columns[i];

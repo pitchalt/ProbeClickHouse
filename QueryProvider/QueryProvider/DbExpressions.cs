@@ -156,7 +156,7 @@ namespace QueryProviderTest {
                 case DbExpressionType.Column:
                     return this.VisitColumn((ColumnExpression)exp);
                 case DbExpressionType.Select:
-                    return this.VisitSelect((SelectExpression)exp, _logger);
+                    return this.VisitSelect((SelectExpression)exp);
                 case DbExpressionType.Join:
                     return this.VisitJoin((JoinExpression)exp);
                 case DbExpressionType.Projection:
@@ -171,7 +171,7 @@ namespace QueryProviderTest {
         protected virtual Expression VisitColumn(ColumnExpression column) {
             return column;
         }
-       protected virtual Expression VisitSelect(SelectExpression select,TextWriter logger) {
+       protected virtual Expression VisitSelect(SelectExpression select) {
             Expression from = this.VisitSource(select.From);
             Expression where = this.Visit(select.Where);
             ReadOnlyCollection<ColumnDeclaration> columns = this.VisitColumnDeclarations(select.Columns);

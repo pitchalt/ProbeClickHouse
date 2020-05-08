@@ -37,7 +37,7 @@ namespace QueryProviderTest {
             return column;
         }
 
-        protected override Expression VisitSelect(SelectExpression select,TextWriter logger)
+        protected override Expression VisitSelect(SelectExpression select)
         {
             // visit column projection first
             ReadOnlyCollection<ColumnDeclaration> columns = select.Columns;

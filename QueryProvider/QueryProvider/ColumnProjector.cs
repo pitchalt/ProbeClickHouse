@@ -113,6 +113,7 @@ namespace QueryProviderTest {
             }
 
             protected override Expression Visit(Expression expression) {
+                Logger.WriteLine("Visit: " + this.GetType().FullName + " DbExpNodeType " + expression.NodeType.ToString());
                 if (expression != null) {
                     bool saveIsBlocked = this.isBlocked;
                     this.isBlocked = false;
