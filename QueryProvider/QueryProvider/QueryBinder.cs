@@ -14,12 +14,9 @@ namespace QueryProviderTest{
         int aliasCount;
         IQueryProvider provider;
 
-         TextWriter _logger;
-        
         internal QueryBinder(IQueryProvider provider, TextWriter logger): base(logger) {
             this.provider = provider;
             this.columnProjector = new ColumnProjector(this.CanBeColumn, Logger);
-             _logger = logger;
         }
 
         private bool CanBeColumn(Expression expression) {

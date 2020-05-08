@@ -137,19 +137,14 @@ namespace QueryProviderTest {
     }
 
     internal class DbExpressionVisitor : ExpressionVisitor {
-        TextWriter _logger;
-        protected DbExpressionVisitor(TextWriter logger) : base(logger) {
-            _logger = logger;
-         }
+        protected DbExpressionVisitor(TextWriter logger) : base(logger) { }
 
         protected override Expression Visit(Expression exp) {
             if (exp == null) {
                 return null;
             }
-
+            VisitLog(exp);
             var nodeType = (DbExpressionType) exp.NodeType;
-            if (nodeType >= DbExpressionType.Table)
-                Logger.WriteLine("Visit: " + this.GetType().FullName + " DbExpNodeType " + nodeType.ToString());
             switch (nodeType) {
                 case DbExpressionType.Table:
                     return this.VisitTable((TableExpression)exp);
