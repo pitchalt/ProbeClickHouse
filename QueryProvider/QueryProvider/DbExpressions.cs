@@ -143,7 +143,7 @@ namespace QueryProviderTest {
             if (exp == null) {
                 return null;
             }
-            VisitLog(exp);
+            VisitLog("DbExp", exp);
             var nodeType = (DbExpressionType) exp.NodeType;
             switch (nodeType) {
                 case DbExpressionType.Table:

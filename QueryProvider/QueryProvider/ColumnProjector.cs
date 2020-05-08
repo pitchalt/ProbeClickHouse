@@ -48,7 +48,7 @@ namespace QueryProviderTest {
         }
 
         protected override Expression Visit(Expression expression) {
-            VisitLog(expression);
+            VisitLog("CP", expression);
             if (this.candidates.Contains(expression)) {
                 if (expression.NodeType == (ExpressionType)DbExpressionType.Column) {
                     ColumnExpression column = (ColumnExpression)expression;
@@ -114,7 +114,7 @@ namespace QueryProviderTest {
             }
 
             protected override Expression Visit(Expression expression) {
-                VisitLog(expression);
+                VisitLog("CP", expression);
                 if (expression != null) {
                     bool saveIsBlocked = this.isBlocked;
                     this.isBlocked = false;

@@ -19,6 +19,7 @@ namespace QueryProviderTest {
         }
         protected override Expression Visit(Expression exp) {
             if (exp == this.searchFor) {
+                VisitLog("Replacer", exp);
                 return this.replaceWith;
             }
             return base.Visit(exp);

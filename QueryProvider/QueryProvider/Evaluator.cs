@@ -48,6 +48,8 @@ namespace QueryProviderTest {
                 if (exp == null) {
                     return null;
                 }
+
+                VisitLog("STE", exp);
                 if (this.candidates.Contains(exp)) {
                     return this.Evaluate(exp);
                 }

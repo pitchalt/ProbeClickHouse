@@ -17,7 +17,7 @@ namespace QueryProviderTest {
         protected virtual Expression Visit(Expression exp) {
             if (exp == null)
                 return exp;
-            VisitLog(exp);
+            VisitLog("Base", exp);
             switch (exp.NodeType) {
                 case ExpressionType.Negate:
                 case ExpressionType.NegateChecked:
@@ -311,13 +311,16 @@ namespace QueryProviderTest {
             return iv;
         }
 
-        protected virtual void VisitLog(Expression exp) {
+        protected virtual void VisitLog(String prefix, Expression exp) {
+            if (exp == null)
+                return;
+            var title = $"Visit {prefix}: {this.GetType().FullName}";
             if ((Int32)exp.NodeType < 1000) {
-                Logger.WriteLine("Visit: " + this.GetType().FullName + " NodeType " + exp.NodeType.ToString());
+                Logger.WriteLine(title + " NodeType " + exp.NodeType.ToString());
             }
             else {
                 DbExpressionType dbExpType = (DbExpressionType) exp.NodeType;
-                Logger.WriteLine("Visit: " + this.GetType().FullName + " DbExpNodeType " + dbExpType.ToString());
+                Logger.WriteLine(title + " DbExpNodeType " + dbExpType.ToString());
             }
 
         }
