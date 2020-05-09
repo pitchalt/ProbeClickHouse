@@ -154,6 +154,20 @@ namespace QueryProviderTest.Tests {
         }
 
         [Fact]
+        public void Part02ConstQueryFormatterTest() {
+            using (DbConnection con = CreateSqLiteConnection()) {
+                var provider = new DbQueryProvider(con) {
+                    Log = _TestOutWriter
+                };
+                var query = new Query<Customers>(provider);
+                var command = query.ToString();
+                Assert.StartsWith("SELECT", command);
+            }
+
+            Assert.True(true);
+        }
+
+        [Fact]
         public void Part02Query() {
             IList list;
             using (DbConnection con = CreateSqLiteConnection()) {
