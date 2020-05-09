@@ -10,12 +10,12 @@ namespace QueryProviderTest {
         Expression searchFor;
         Expression replaceWith;
 
-        internal Replacer(TextWriter logger) : base(logger) { }
-
-        internal Expression Replace(Expression expression, Expression searchFor, Expression replaceWith) {
+        private Replacer(Expression searchFor, Expression replaceWith,TextWriter logger) : base(logger){
             this.searchFor = searchFor;
             this.replaceWith = replaceWith;
-            return this.Visit(expression);
+        }
+         internal static Expression Replace(Expression expression, Expression searchFor, Expression replaceWith,TextWriter logger) {
+            return new Replacer(searchFor, replaceWith,logger).Visit(expression);
         }
         protected override Expression Visit(Expression exp) {
             if (exp == this.searchFor) {

@@ -23,30 +23,37 @@ namespace QueryProviderTest {
     internal class ProjectionBuilder : DbExpressionVisitor {
         ParameterExpression row;
         string rowAlias;
+        IList<string> columns;
         static MethodInfo miGetValue;
         static MethodInfo miGetValueDateTime;
         static MethodInfo miExecuteSubQuery;
         
-        internal ProjectionBuilder(TextWriter logger): base(logger) {
+        internal ProjectionBuilder(string rowAlias, IList<string> columns,TextWriter logger): base(logger) {
+            this.rowAlias = rowAlias;
+            this.columns = columns;
+            this.row = Expression.Parameter(typeof(ProjectionRow), "row");
             if (miGetValue == null) {
-                miGetValue = typeof(ProjectionRow).GetMethod(nameof(ProjectionRow.GetValue));
-                miGetValueDateTime = typeof(ProjectionRow).GetMethod(nameof(ProjectionRow.GetValueDateTime));
+                miGetValue = typeof(ProjectionRow).GetMethod("GetValue");
                 miExecuteSubQuery = typeof(ProjectionRow).GetMethod("ExecuteSubQuery");
             }
         }
 
-        internal LambdaExpression Build(Expression expression, string alias) {
-            this.row = Expression.Parameter(typeof(ProjectionRow), "row");
-            this.rowAlias = alias;
-            Expression body = this.Visit(expression);
-            return Expression.Lambda(body, this.row);
+        internal static LambdaExpression Build(Expression expression, string alias, IList<string> columns,TextWriter logger ) {
+                 ProjectionBuilder builder = new ProjectionBuilder(alias, columns,logger);
+            Expression body = builder.Visit(expression);
+            return Expression.Lambda(body, builder.row);
         }
 
         protected override Expression VisitColumn(ColumnExpression column) {
-            if (column.Alias == this.rowAlias) {
-                if (column.Type == typeof(DateTime))
-                    return Expression.Convert(Expression.Call(this.row, miGetValueDateTime, Expression.Constant(column.Ordinal)), column.Type);
-                return Expression.Convert(Expression.Call(this.row, miGetValue, Expression.Constant(column.Ordinal)), column.Type);
+             if (column.Alias == this.rowAlias) {
+                int iOrdinal = this.columns.IndexOf(column.Name);
+                return Expression.Convert(
+                    Expression.Call(typeof(System.Convert), "ChangeType", null,
+                        Expression.Call(this.row, miGetValue, Expression.Constant(iOrdinal)),
+                        Expression.Constant(column.Type)
+                        ),                        
+                        column.Type
+                    );
             }
             return column;
         }
@@ -109,9 +116,8 @@ namespace QueryProviderTest {
                 }
                 throw new IndexOutOfRangeException();
             }
-
-            public override IEnumerable<E> ExecuteSubQuery<E>(LambdaExpression query) {
-                ProjectionExpression projection = (ProjectionExpression) new Replacer(Logger).Replace(query.Body, query.Parameters[0], Expression.Constant(this));
+        public override IEnumerable<E> ExecuteSubQuery<E>(LambdaExpression query) {
+                ProjectionExpression projection = (ProjectionExpression) Replacer.Replace(query.Body, query.Parameters[0], Expression.Constant(this), Logger);
                 projection = (ProjectionExpression) Evaluator.PartialEval(projection, CanEvaluateLocally, Logger);
                 IEnumerable<E> result = (IEnumerable<E>)this.provider.Execute(projection);
                 List<E> list = new List<E>(result);
@@ -120,7 +126,6 @@ namespace QueryProviderTest {
                 }
                 return list;
             }
-
             private static bool CanEvaluateLocally(Expression expression) {
                 if (expression.NodeType == ExpressionType.Parameter ||
                     expression.NodeType.IsDbExpression()) {

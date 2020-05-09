@@ -11,11 +11,16 @@ using System.Text;
 namespace QueryProviderTest {
 
     internal enum DbExpressionType {
-        Table = 1000, // make sure these don't overlap with ExpressionType
+       Table = 1000, // make sure these don't overlap with ExpressionType
         Column,
         Select,
         Projection,
-        Join
+        Join,
+        Aggregate,
+        Subquery,
+        Grouping,
+        AggregateSubquery,
+        IsNull
     }
 
     internal static class DbExpressionExtensions {
@@ -40,24 +45,19 @@ namespace QueryProviderTest {
         }
     }
 
-    internal class ColumnExpression : Expression {
+   internal class ColumnExpression : Expression {
         string alias;
         string name;
-        int ordinal;
-        internal ColumnExpression(Type type, string alias, string name, int ordinal)
+        internal ColumnExpression(Type type, string alias, string name)
             : base((ExpressionType)DbExpressionType.Column, type) {
             this.alias = alias;
             this.name = name;
-            this.ordinal = ordinal;
         }
         internal string Alias {
             get { return this.alias; }
         }
         internal string Name {
             get { return this.name; }
-        }
-        internal int Ordinal {
-            get { return this.ordinal; }
         }
     }
 
@@ -76,15 +76,24 @@ namespace QueryProviderTest {
         }
     }
 
+    
     internal class SelectExpression : Expression {
         string alias;
         ReadOnlyCollection<ColumnDeclaration> columns;
         Expression from;
         Expression where;
         ReadOnlyCollection<OrderExpression> orderBy;
-         internal SelectExpression(
-            Type type, string alias, IEnumerable<ColumnDeclaration> columns, 
-            Expression from, Expression where, IEnumerable<OrderExpression> orderBy)
+        ReadOnlyCollection<Expression> groupBy;
+
+        internal SelectExpression(
+            Type type, 
+            string alias, 
+            IEnumerable<ColumnDeclaration> columns, 
+            Expression from, 
+            Expression where, 
+            IEnumerable<OrderExpression> orderBy,
+            IEnumerable<Expression> groupBy
+            )
             : base((ExpressionType)DbExpressionType.Select, type) {
             this.alias = alias;
             this.columns = columns as ReadOnlyCollection<ColumnDeclaration>;
@@ -97,14 +106,16 @@ namespace QueryProviderTest {
             if (this.orderBy == null && orderBy != null) {
                 this.orderBy = new List<OrderExpression>(orderBy).AsReadOnly();
             }
+            this.groupBy = groupBy as ReadOnlyCollection<Expression>;
+            if (this.groupBy == null && groupBy != null) {
+                this.groupBy = new List<Expression>(groupBy).AsReadOnly();
+            }
         }
         internal SelectExpression(
             Type type, string alias, IEnumerable<ColumnDeclaration> columns, 
-            Expression from, Expression where)
-            : this(type, alias, columns, from, where, null) {
-        }
-         internal ReadOnlyCollection<OrderExpression> OrderBy {
-            get { return this.orderBy; }
+            Expression from, Expression where
+            )
+            : this(type, alias, columns, from, where, null, null) {
         }
         internal string Alias {
             get { return this.alias; }
@@ -118,15 +129,26 @@ namespace QueryProviderTest {
         internal Expression Where {
             get { return this.where; }
         }
+        internal ReadOnlyCollection<OrderExpression> OrderBy {
+            get { return this.orderBy; }
+        }
+        internal ReadOnlyCollection<Expression> GroupBy {
+            get { return this.groupBy; }
+        }
     }
 
-    internal class ProjectionExpression : Expression {
+   internal class ProjectionExpression : Expression {
         SelectExpression source;
         Expression projector;
+        LambdaExpression aggregator;
         internal ProjectionExpression(SelectExpression source, Expression projector)
+            : this (source, projector, null) {
+        }
+        internal ProjectionExpression(SelectExpression source, Expression projector, LambdaExpression aggregator)
             : base((ExpressionType)DbExpressionType.Projection, source.Type) {
             this.source = source;
             this.projector = projector;
+            this.aggregator = aggregator;
         }
         internal SelectExpression Source {
             get { return this.source; }
@@ -134,31 +156,38 @@ namespace QueryProviderTest {
         internal Expression Projector {
             get { return this.projector; }
         }
+        internal LambdaExpression Aggregator {
+            get { return this.aggregator; }
+        }
     }
 
     internal class DbExpressionVisitor : ExpressionVisitor {
-        TextWriter _logger;
+        
         protected DbExpressionVisitor(TextWriter logger) : base(logger) {
-            _logger = logger;
+            
          }
 
         protected override Expression Visit(Expression exp) {
             if (exp == null) {
                 return null;
             }
-
-            var nodeType = (DbExpressionType) exp.NodeType;
-            if (nodeType >= DbExpressionType.Table)
-                Logger.WriteLine("Visit: " + this.GetType().FullName + " DbExpNodeType " + nodeType.ToString());
-            switch (nodeType) {
+            switch ((DbExpressionType)exp.NodeType) {
                 case DbExpressionType.Table:
                     return this.VisitTable((TableExpression)exp);
                 case DbExpressionType.Column:
                     return this.VisitColumn((ColumnExpression)exp);
                 case DbExpressionType.Select:
-                    return this.VisitSelect((SelectExpression)exp, _logger);
+                    return this.VisitSelect((SelectExpression)exp);
                 case DbExpressionType.Join:
                     return this.VisitJoin((JoinExpression)exp);
+                case DbExpressionType.Aggregate:
+                    return this.VisitAggregate((AggregateExpression)exp);
+                case DbExpressionType.Subquery:
+                    return this.VisitSubquery((SubqueryExpression)exp);
+                case DbExpressionType.AggregateSubquery:
+                    return this.VisitAggregateSubquery((AggregateSubqueryExpression)exp);
+                case DbExpressionType.IsNull:
+                    return this.VisitIsNull((IsNullExpression)exp);
                 case DbExpressionType.Projection:
                     return this.VisitProjection((ProjectionExpression)exp);
                 default:
@@ -171,15 +200,61 @@ namespace QueryProviderTest {
         protected virtual Expression VisitColumn(ColumnExpression column) {
             return column;
         }
-       protected virtual Expression VisitSelect(SelectExpression select,TextWriter logger) {
+       protected virtual Expression VisitSelect(SelectExpression select) {
             Expression from = this.VisitSource(select.From);
             Expression where = this.Visit(select.Where);
             ReadOnlyCollection<ColumnDeclaration> columns = this.VisitColumnDeclarations(select.Columns);
             ReadOnlyCollection<OrderExpression> orderBy = this.VisitOrderBy(select.OrderBy);
-            if (from != select.From || where != select.Where || columns != select.Columns || orderBy != select.OrderBy) {
-                return new SelectExpression(select.Type, select.Alias, columns, from, where, orderBy);
+               ReadOnlyCollection<Expression> groupBy = this.VisitExpressionList(select.GroupBy);
+
+    if (from != select.From
+
+   || where != select.Where
+
+        || columns != select.Columns
+
+        || orderBy != select.OrderBy
+
+        || groupBy != select.GroupBy
+
+        ) {
+
+        return new SelectExpression(select.Type, select.Alias, columns, from, where, orderBy, groupBy);
+
+    }
+
+    return select;
+        }
+
+ protected virtual Expression VisitAggregate(AggregateExpression aggregate) {
+            Expression arg = this.Visit(aggregate.Argument);
+            if (arg != aggregate.Argument) {
+                return new AggregateExpression(aggregate.Type, aggregate.AggregateType, arg);
             }
-            return select;
+            return aggregate;
+        }
+        protected virtual Expression VisitIsNull(IsNullExpression isnull) {
+            Expression expr = this.Visit(isnull.Expression);
+            if (expr != isnull.Expression) {
+                return new IsNullExpression(expr);
+            }
+            return isnull;
+        }
+        protected virtual Expression VisitSubquery(SubqueryExpression subquery) {
+            SelectExpression select = (SelectExpression)this.Visit(subquery.Select);
+            if (select != subquery.Select) {
+                return new SubqueryExpression(subquery.Type, select);
+            }
+            return subquery;
+        }
+        protected virtual Expression VisitAggregateSubquery(AggregateSubqueryExpression aggregate) {
+            Expression e = this.Visit(aggregate.AggregateAsSubquery);
+            System.Diagnostics.Debug.Assert(e is SubqueryExpression);
+            SubqueryExpression subquery = (SubqueryExpression)e;
+            if (subquery != aggregate.AggregateAsSubquery) {
+                return new AggregateSubqueryExpression(aggregate.GroupByAlias, aggregate.AggregateInGroupSelect, subquery);
+            }
+            return aggregate;
         }
         protected ReadOnlyCollection<OrderExpression> VisitOrderBy(ReadOnlyCollection<OrderExpression> expressions) {
             if (expressions != null) {
@@ -237,5 +312,110 @@ namespace QueryProviderTest {
             }
             return columns;
         }
+    }
+
+    internal class IsNullExpression : Expression {
+        Expression expression;
+        internal IsNullExpression(Expression expression) 
+            : base((ExpressionType)DbExpressionType.IsNull, typeof(bool)) {
+            this.expression = expression;
+        }
+        internal Expression Expression {
+            get { return this.expression; }
+        }
+    }
+    internal enum AggregateType {
+
+        Count,
+
+        Min,
+
+        Max,
+
+        Sum,
+
+        Average
+
+    }
+
+    internal class AggregateExpression : Expression {
+
+        AggregateType aggType;
+
+        Expression argument;
+
+        internal AggregateExpression(Type type, AggregateType aggType, Expression argument)
+
+            : base((ExpressionType)DbExpressionType.Aggregate, type) {
+
+  this.aggType = aggType;
+
+            this.argument = argument;
+
+        }
+
+        internal AggregateType AggregateType {
+
+            get { return this.aggType; }
+
+        }
+
+        internal Expression Argument {
+
+            get { return this.argument; }
+
+        }
+
+    }
+
+
+     internal class SubqueryExpression : Expression {
+
+        SelectExpression select;
+
+        internal SubqueryExpression(Type type, SelectExpression select)
+
+            : base((ExpressionType)DbExpressionType.Subquery, type) {
+
+            this.select = select;
+
+        }
+
+        internal SelectExpression Select {
+
+            get { return this.select; }
+
+        }
+
+    }
+
+    internal class AggregateSubqueryExpression : Expression {
+
+        string groupByAlias;
+
+        Expression aggregateInGroupSelect;
+
+        SubqueryExpression aggregateAsSubquery;
+
+        internal AggregateSubqueryExpression(string groupByAlias, Expression aggregateInGroupSelect, SubqueryExpression aggregateAsSubquery)
+
+            : base((ExpressionType)DbExpressionType.AggregateSubquery, aggregateAsSubquery.Type)
+
+        {
+
+            this.aggregateInGroupSelect = aggregateInGroupSelect;
+
+            this.groupByAlias = groupByAlias;
+
+            this.aggregateAsSubquery = aggregateAsSubquery;
+
+        }
+
+        internal string GroupByAlias { get { return this.groupByAlias; } }
+
+        internal Expression AggregateInGroupSelect { get { return this.aggregateInGroupSelect; } }
+
+        internal SubqueryExpression AggregateAsSubquery { get { return this.aggregateAsSubquery; } }
+
     }
 }
