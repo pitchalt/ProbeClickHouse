@@ -384,7 +384,7 @@ namespace QueryProviderTest{
             else {
                 this.map[resultSelector.Parameters[0]] = projection.Projector;
                 this.map[resultSelector.Parameters[1]] = collectionProjection.Projector;
-                Expression result = this.VisitSequence(resultSelector.Body);
+                Expression result = this.Visit(resultSelector.Body);
                 pc = this.ProjectColumns(result, alias, projection.Source.Alias, collectionProjection.Source.Alias);
             }
             return new ProjectionExpression(

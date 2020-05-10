@@ -327,8 +327,8 @@ namespace QueryProviderTest.Tests {
 
             Assert.Equal(1, list.Count);
         }
-        /*
-        [Fact]
+
+//        [Fact]
         public void Part07SelectManyQuery()
         {
             //IEnumerable en;
@@ -343,19 +343,10 @@ namespace QueryProviderTest.Tests {
                  (c, o) => new { c.ContactName, o.OrderDate }
                  );
                  list = query.ToList();
-                 c = query.Count();
-             //   _testOutputHelper.WriteLine("Query:\n{0}\n", query);
-               //  _testOutputHelper.WriteLine("mememem");
-            //     foreach (var item in query) {
-           //          _testOutputHelper.WriteLine("item:\n{0}\n", item);
-            //    }           
-               
             }   
             
             Assert.Equal(1, 1);          
         }
-        */
-
 
         [Fact]
         public void Part08OrderQuery() {
