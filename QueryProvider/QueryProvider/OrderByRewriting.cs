@@ -15,12 +15,13 @@ namespace QueryProviderTest {
      internal class OrderByRewriter : DbExpressionVisitor {
         IEnumerable<OrderExpression> gatheredOrderings;
         bool isOuterMostSelect;
-        public OrderByRewriter(TextWriter logger) : base (logger){
+        
+        private OrderByRewriter(TextWriter logger) : base (logger){
+             this.isOuterMostSelect = true;
         }
 
-        public Expression Rewrite(Expression expression) {
-            this.isOuterMostSelect = true;
-            return this.Visit(expression);
+        internal static Expression Rewrite(Expression expression,TextWriter logger) {
+            return new OrderByRewriter(logger).Visit(expression);
         }
 
         protected override Expression VisitSelect(SelectExpression select) {
@@ -33,12 +34,12 @@ namespace QueryProviderTest {
                     this.PrependOrderings(select.OrderBy);
                 }
                 bool canHaveOrderBy = saveIsOuterMostSelect;
-                bool canPassOnOrderings = !saveIsOuterMostSelect;
+                bool canPassOnOrderings = !saveIsOuterMostSelect && (select.GroupBy == null || select.GroupBy.Count == 0);
                 IEnumerable<OrderExpression> orderings = (canHaveOrderBy) ? this.gatheredOrderings : null;
                 ReadOnlyCollection<ColumnDeclaration> columns = select.Columns;
                 if (this.gatheredOrderings != null) {
                     if (canPassOnOrderings) {
-                        HashSet<string> producedAliases = new AliasesProduced(Logger).Gather(select.From);
+                        HashSet<string> producedAliases = AliasesProduced.Gather(select.From,Logger);
                         // reproject order expressions using this select's alias so the outer select will have properly formed expressions
                         BindResult project = this.RebindOrderings(this.gatheredOrderings, select.Alias, producedAliases, select.Columns);
                         this.gatheredOrderings = project.Orderings;
@@ -49,7 +50,7 @@ namespace QueryProviderTest {
                     }
                 }
                 if (orderings != select.OrderBy || columns != select.Columns) {
-                    select = new SelectExpression(select.Type, select.Alias, columns, select.From, select.Where, orderings);
+                    select = new SelectExpression(select.Type, select.Alias, columns, select.From, select.Where, orderings, select.GroupBy);
                 }
                 return select;
             }
@@ -57,11 +58,15 @@ namespace QueryProviderTest {
                 this.isOuterMostSelect = saveIsOuterMostSelect;
             }
         }
-
+         protected override Expression VisitSubquery(SubqueryExpression subquery) {
+            var saveOrderings = this.gatheredOrderings;
+            this.gatheredOrderings = null;
+            var result = base.VisitSubquery(subquery);
+            this.gatheredOrderings = saveOrderings;
+            return result;
+        }
         protected override Expression VisitJoin(JoinExpression join) {
-            // make sure order by expressions lifted up from the left side are not lost
-            // when visiting the right side
-            Expression left = this.VisitSource(join.Left);
+           Expression left = this.VisitSource(join.Left);
             IEnumerable<OrderExpression> leftOrders = this.gatheredOrderings;
             this.gatheredOrderings = null; // start on the right with a clean slate
             Expression right = this.VisitSource(join.Right);
@@ -73,11 +78,7 @@ namespace QueryProviderTest {
             return join;
         }
 
-        /// <summary>
-        /// Add a sequence of order expressions to an accumulated list, prepending so as
-        /// to give precedence to the new expressions over any previous expressions
-        /// </summary>
-        /// <param name="newOrderings"></param>
+       
         protected void PrependOrderings(IEnumerable<OrderExpression> newOrderings) {
             if (newOrderings != null) {
                 if (this.gatheredOrderings == null) {
@@ -114,12 +115,10 @@ namespace QueryProviderTest {
             }
         }
 
-        /// <summary>
-        /// Rebind order expressions to reference a new alias and add to column declarations if necessary
-        /// </summary>
+     
 
          protected virtual BindResult RebindOrderings(IEnumerable<OrderExpression> orderings, string alias, HashSet<string> existingAliases, IEnumerable<ColumnDeclaration> existingColumns) {
-            List<ColumnDeclaration> newColumns = null;
+             List<ColumnDeclaration> newColumns = null;
             List<OrderExpression> newOrderings = new List<OrderExpression>();
             foreach (OrderExpression ordering in orderings) {
                 Expression expr = ordering.Expression;
@@ -132,7 +131,7 @@ namespace QueryProviderTest {
                         if (decl.Expression == ordering.Expression || 
                             (column != null && declColumn != null && column.Alias == declColumn.Alias && column.Name == declColumn.Name)) {
                             // found it, so make a reference to this column
-                            expr = new ColumnExpression(column.Type, alias, decl.Name, iOrdinal);
+                            expr = new ColumnExpression(column.Type, alias, decl.Name);
                             break;
                         }
                         iOrdinal++;
@@ -145,7 +144,7 @@ namespace QueryProviderTest {
                         }
                         string colName = column != null ? column.Name : "c" + iOrdinal;
                         newColumns.Add(new ColumnDeclaration(colName, ordering.Expression));
-                        expr = new ColumnExpression(expr.Type, alias, colName, iOrdinal);
+                        expr = new ColumnExpression(expr.Type, alias, colName);
                     }
                     newOrderings.Add(new OrderExpression(ordering.OrderType, expr));
                 }
@@ -157,11 +156,14 @@ namespace QueryProviderTest {
 
       internal class AliasesProduced : DbExpressionVisitor {
         HashSet<string> aliases;
-        public AliasesProduced(TextWriter logger) : base (logger){ }
-        public HashSet<string> Gather(Expression source) {
-            this.aliases = new HashSet<string>();
-            this.Visit(source);
-            return this.aliases;
+   
+        private AliasesProduced(TextWriter logger) : base (logger){
+         this.aliases = new HashSet<string>();
+        }
+        internal static HashSet<string> Gather(Expression source,TextWriter logger) {
+       AliasesProduced produced = new AliasesProduced(logger);
+            produced.Visit(source);
+            return produced.aliases;
         }
 
         protected override Expression VisitSelect(SelectExpression select) {

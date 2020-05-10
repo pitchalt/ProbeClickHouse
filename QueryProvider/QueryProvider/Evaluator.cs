@@ -13,8 +13,9 @@ namespace QueryProviderTest {
         /// <param name="expression">The root of the expression tree.</param>
         /// <param name="fnCanBeEvaluated">A function that decides whether a given expression node can be part of the local function.</param>
         /// <returns>A new tree with sub-trees evaluated and replaced.</returns>
-        public static Expression PartialEval(Expression expression, Func<Expression, bool> fnCanBeEvaluated, TextWriter logger) {
-            return new SubtreeEvaluator(new Nominator(fnCanBeEvaluated, logger).Nominate(expression), logger).Eval(expression);
+      
+         public static Expression PartialEval(Expression expression, Func<Expression, bool> fnCanBeEvaluated, TextWriter logger) {
+            return SubtreeEvaluator.Eval(Nominator.Nominate(fnCanBeEvaluated, expression,logger), expression,logger);
         }
 
         /// <summary>
@@ -40,8 +41,8 @@ namespace QueryProviderTest {
                 this.candidates = candidates;
             }
 
-            internal Expression Eval(Expression exp) {
-                return this.Visit(exp);
+             internal static Expression Eval(HashSet<Expression> candidates, Expression exp, TextWriter logger) {
+                return new SubtreeEvaluator(candidates,logger).Visit(exp);
             }
 
             protected override Expression Visit(Expression exp) {
@@ -75,14 +76,15 @@ namespace QueryProviderTest {
             HashSet<Expression> candidates;
             bool cannotBeEvaluated;
 
-            internal Nominator(Func<Expression, bool> fnCanBeEvaluated, TextWriter logger): base(logger) {
+            private Nominator(Func<Expression, bool> fnCanBeEvaluated, TextWriter logger): base(logger) {
+                  this.candidates = new HashSet<Expression>();
                 this.fnCanBeEvaluated = fnCanBeEvaluated;
             }
 
-            internal HashSet<Expression> Nominate(Expression expression) {
-                this.candidates = new HashSet<Expression>();
-                this.Visit(expression);
-                return this.candidates;
+            internal static HashSet<Expression> Nominate(Func<Expression, bool> fnCanBeEvaluated, Expression expression, TextWriter logger) {
+               Nominator nominator = new Nominator(fnCanBeEvaluated,logger);
+                nominator.Visit(expression);
+                return nominator.candidates;
             }
 
             protected override Expression Visit(Expression expression) {
