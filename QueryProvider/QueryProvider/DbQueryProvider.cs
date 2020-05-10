@@ -49,7 +49,7 @@ namespace QueryProviderTest {
             IEnumerable sequence = (IEnumerable) Activator.CreateInstance(
                 typeof(ProjectionReader<>).MakeGenericType(elementType),
                 BindingFlags.Instance | BindingFlags.NonPublic, null,
-                new object[] { reader, projector, this },
+                new object[] { reader, projector, this, Log },
                 null
                 );
 
